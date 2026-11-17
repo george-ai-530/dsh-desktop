@@ -9,7 +9,9 @@ import {
   AUTO_INSTALL_ON_APP_QUIT,
   shouldCheckAfterResume,
   supportsAutoUpdates,
-  UPDATE_CHECK_INTERVAL_MS
+  UPDATE_CHECK_INTERVAL_MS,
+  UPDATES_DISABLED,
+  updatesDisabled
 } from '../src/main/update/update-policy'
 
 const execFile = promisify(execFileCallback)
@@ -30,6 +32,15 @@ describe('desktop update policy', () => {
     expect(supportsAutoUpdates(true, 'win32')).toBe(true)
     expect(supportsAutoUpdates(true, 'linux')).toBe(false)
     expect(supportsAutoUpdates(false, 'darwin')).toBe(false)
+  })
+
+  it('disables updates in this fork until it publishes its own releases', () => {
+    // A feed release would replace the fork's branding, so the default is off.
+    expect(UPDATES_DISABLED).toBe(true)
+    expect(updatesDisabled()).toBe(true)
+    expect(updatesDisabled(undefined)).toBe(true)
+    expect(updatesDisabled('off')).toBe(true)
+    expect(updatesDisabled('on')).toBe(false)
   })
 
   it('checks after resume only when the interval has elapsed', () => {

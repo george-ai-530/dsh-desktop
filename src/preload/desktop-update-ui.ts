@@ -16,7 +16,6 @@ import {
   UPDATE_ACTION_FAILED,
   type UpdateLocale
 } from './update-view'
-import brandMark from '../../build/brand/brand-mark.svg?raw'
 const t = (key: Parameters<typeof updateText>[1], values: Readonly<Record<string, string | number>> = {}) => updateText(locale, key, values)
 const ROOT_ID = 'dsh-desktop-update-root'
 let locale: UpdateLocale = 'en'
@@ -557,11 +556,9 @@ const styles = `
   .row { display:flex; gap:12px; align-items:center; }
   .body { min-width:0; flex:1; }
   .centered .row { display:block; }
-  .app-icon { display:inline-flex; width:56px; height:56px; padding:6px; background:#0052D9; color:#fff; border-radius:12px; flex:none; position:relative; }
-  .app-icon svg { width:100%; height:100%; }
-  .app-icon svg path { fill:currentColor; }
+  .app-icon { display:inline-block; width:56px; height:56px; flex:none; object-fit:contain; }
   .notification { padding:16px; }
-  .notification .app-icon { width:40px; height:40px; border-radius:9px; }
+  .notification .app-icon { width:40px; height:40px; }
   .title,.about-title { margin:16px 0 8px; font-size:18px; line-height:26px; font-weight:600; }
   .notification .title { margin:0; font-size:14px; line-height:20px; }
   .description,.about-line,.release-notes,.notes-label,.current-version { margin:8px 0; font-size:13px; line-height:20px; color:var(--dsw-alias-label-secondary,#666b73); }
@@ -636,11 +633,12 @@ const styles = `
 `
 const aboutStyles = styles
 
-function appIcon(): HTMLSpanElement {
-  const icon = element('span', 'app-icon')
+function appIcon(): HTMLImageElement {
+  const icon = element('img', 'app-icon')
   icon.setAttribute('aria-hidden', 'true')
-  // Trusted, bundled branding; release text is always assigned with textContent.
-  icon.innerHTML = brandMark
+  // The official bitmap shipped as a packaged resource — the same artwork as
+  // the installer icon; release text is always assigned with textContent.
+  icon.src = 'dsh-desktop://desktop/icon.png'
   return icon
 }
 

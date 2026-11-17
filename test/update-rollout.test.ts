@@ -16,7 +16,7 @@ vi.mock('electron', () => ({
   ipcMain: { handle: (channel: string, handler: () => Promise<unknown>) => { mocks.ipcHandlers.set(channel, handler) } },
   net: { fetch: mocks.netFetch }
 }))
-vi.mock('../src/main/update/update-policy', async importOriginal => ({ ...await importOriginal<object>(), supportsAutoUpdates: () => true }))
+vi.mock('../src/main/update/update-policy', async importOriginal => ({ ...await importOriginal<object>(), supportsAutoUpdates: () => true, updatesDisabled: () => false }))
 let manager: typeof import('../src/main/update/update-manager')
 beforeEach(async () => {
   vi.resetModules(); vi.clearAllMocks(); mocks.handlers.clear(); mocks.ipcHandlers.clear()

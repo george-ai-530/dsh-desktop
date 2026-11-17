@@ -13,7 +13,8 @@ import {
   supportsAutoUpdates,
   UPDATE_CHECK_INTERVAL_MS,
   UPDATE_STARTUP_DELAY_MS,
-  UPDATE_STARTUP_JITTER_MS
+  UPDATE_STARTUP_JITTER_MS,
+  updatesDisabled
 } from './update-policy'
 import {
   initialUpdateStatus,
@@ -36,6 +37,10 @@ import {
 } from './version-catalog'
 
 const { autoUpdater } = electronUpdater
+
+// Shown wherever an update would be offered while this build has updates
+// disabled (see UPDATES_DISABLED in update-policy.ts).
+const UPDATE_DISABLED_MESSAGE = 'Updates are disabled in this build.'
 
 // Default-session Chromium fetch follows that session's proxy configuration.
 const requestVersionIndex: VersionIndexRequest = (url, init) => net.fetch(url, init)
@@ -96,6 +101,7 @@ export async function getApplicationRollbackStatus(): Promise<ApplicationRollbac
 
 /** No renderer-supplied version: recovery can only return to the actual prior installation. */
 export async function rollbackApplication(): Promise<UpdateStatus> {
+  if (updatesDisabled()) throw new Error('updates-disabled')
   if (rollbackPromise) return rollbackPromise
   rollbackPromise = (async () => {
     const available = await getApplicationRollbackStatus()
@@ -141,7 +147,7 @@ export function registerUpdateHandlers(options: { locale?: () => DesktopLocale }
   ipcMain.handle('updates:install', () => installDownloadedUpdate())
   ipcMain.handle('updates:skip', (_event, version: unknown) => skipUpdate(version))
   ipcMain.handle('updates:download', () => downloadAvailableUpdate())
-  ipcMain.handle('updates:list-versions', () => fetchDesktopReleases())
+  ipcMain.handle('updates:list-versions', () => updatesDisabled() ? [] : fetchDesktopReleases())
   ipcMain.handle('updates:install-version', (_event, version: unknown) =>
     installSpecificVersion(version)
   )
@@ -196,6 +202,14 @@ export function startUpdateManager(options: {
     return
   }
 
+  if (updatesDisabled()) {
+    transition({
+      type: 'unsupported',
+      message: UPDATE_DISABLED_MESSAGE
+    })
+    return
+  }
+
   configureUpdater()
   startupTimer = setTimeout(
     () => void checkForUpdates(false, 'startup'),
@@ -208,6 +222,10 @@ export function startUpdateManager(options: {
 export async function checkForUpdates(manual = false, source: UpdateStatus['source'] = manual ? 'manual' : 'runtime'): Promise<UpdateStatus> {
   if (rollbackOwnsUpdater || installing || (!manual && canCheckAutomatically?.() === false)) return getUpdateStatus()
   if (manual) status.presentationId = ++presentationId
+  if (updatesDisabled()) {
+    transition({ type: 'unsupported', message: UPDATE_DISABLED_MESSAGE }, manual)
+    return getUpdateStatus()
+  }
   if (!supportsUpdates()) {
     transition(
       {
@@ -294,6 +312,7 @@ export async function downloadAvailableUpdate(): Promise<UpdateStatus> {
 }
 
 async function downloadAvailableUpdateOwned(owner?: symbol): Promise<UpdateStatus> {
+  if (updatesDisabled()) return getUpdateStatus()
   if ((rollbackOwnsUpdater && owner !== ROLLBACK_OWNER) || installing) return getUpdateStatus()
   if (status.phase !== 'available' || downloading) return getUpdateStatus()
   const expectedVersion = status.availableVersion
@@ -329,7 +348,7 @@ export async function installSpecificVersion(version: unknown): Promise<UpdateSt
 async function installSpecificVersionOwned(version: unknown, owner?: symbol): Promise<UpdateStatus> {
   if ((rollbackOwnsUpdater && owner !== ROLLBACK_OWNER) || installing) return getUpdateStatus()
   if (!isVersion(version) || compareVersions(version, app.getVersion()) >= 0) return getUpdateStatus()
-  if (!supportsUpdates()) return getUpdateStatus()
+  if (updatesDisabled() || !supportsUpdates()) return getUpdateStatus()
   if (checkPromise || ['checking', 'downloading', 'downloaded'].includes(status.phase)) {
     return getUpdateStatus()
   }

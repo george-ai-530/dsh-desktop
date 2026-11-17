@@ -12,6 +12,9 @@ vi.mock('electron', () => ({ app: { isPackaged: true, getVersion: () => '0.13.0'
 vi.mock('electron-updater', () => ({ default: { autoUpdater: mocks.updater } }))
 vi.mock('../src/main/desktop-service', () => ({ checkDesktopUpdate: vi.fn() }))
 vi.mock('../src/main/update/version-catalog', async original => ({ ...await original<object>(), fetchAvailableReleases: mocks.catalog }))
+// These tests exercise the rollback flow itself; the fork's update disable
+// switch is covered by update-disabled.test.ts.
+vi.mock('../src/main/update/update-policy', async original => ({ ...await original<object>(), updatesDisabled: () => false }))
 let manager: typeof import('../src/main/update/update-manager')
 beforeEach(async () => {
   vi.resetModules()

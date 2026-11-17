@@ -3,6 +3,19 @@ export const UPDATE_STARTUP_DELAY_MS = 15_000
 export const UPDATE_STARTUP_JITTER_MS = 15_000
 export const AUTO_INSTALL_ON_APP_QUIT = false
 
+/**
+ * This fork ships branding and packaging that the public update feed does not
+ * carry: applying a feed release would replace the customized product. Every
+ * update path is therefore disabled until this fork publishes its own
+ * releases. `DSH_DESKTOP_UPDATES=on` re-enables checks for one session so the
+ * feed plumbing can be exercised without rebuilding.
+ */
+export const UPDATES_DISABLED = true
+
+export function updatesDisabled(env: string | undefined = process.env.DSH_DESKTOP_UPDATES): boolean {
+  return UPDATES_DISABLED && env !== 'on'
+}
+
 export function supportsAutoUpdates(isPackaged: boolean, platform: NodeJS.Platform): boolean {
   return isPackaged && (platform === 'darwin' || platform === 'win32')
 }
