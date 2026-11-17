@@ -24,7 +24,7 @@ function deferred() {
 }
 
 describe('Awesome workbench published catalog', () => {
-  it('uses the DSH Desktop market domain', () => {
+  it('uses the COWIN Harness Desktop market domain', () => {
     expect(DEFAULT_CATALOG_URL).toBe('https://market.dshdesktop.com/index.json')
   })
 

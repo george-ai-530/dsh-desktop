@@ -5,12 +5,12 @@ import { electronNodeExecutable } from '../src/main/shell/backend/electron-node-
 
 describe('electronNodeExecutable', () => {
   it('uses the app Helper on macOS', () => {
-    expect(electronNodeExecutable('/Applications/DSH Desktop.app/Contents/MacOS/DSH Desktop', 'darwin'))
-      .toBe('/Applications/DSH Desktop.app/Contents/Frameworks/DSH Desktop Helper.app/Contents/MacOS/DSH Desktop Helper')
+    expect(electronNodeExecutable('/Applications/COWIN Harness Desktop.app/Contents/MacOS/COWIN Harness Desktop', 'darwin'))
+      .toBe('/Applications/COWIN Harness Desktop.app/Contents/Frameworks/COWIN Harness Desktop Helper.app/Contents/MacOS/COWIN Harness Desktop Helper')
   })
 
   it('uses the main executable elsewhere', () => {
-    expect(electronNodeExecutable('C:\\DSH Desktop\\DSH Desktop.exe', 'win32')).toBe('C:\\DSH Desktop\\DSH Desktop.exe')
+    expect(electronNodeExecutable('C:\\COWIN Harness Desktop\\COWIN Harness Desktop.exe', 'win32')).toBe('C:\\COWIN Harness Desktop\\COWIN Harness Desktop.exe')
     expect(electronNodeExecutable('/opt/dsh/dsh-desktop', 'linux')).toBe('/opt/dsh/dsh-desktop')
   })
 

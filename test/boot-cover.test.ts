@@ -80,7 +80,7 @@ describe('boot cover lifecycle', () => {
     doc.documentElement.lang = 'ja'
     await Promise.resolve()
     const root = doc.getElementById(BOOT_COVER_ID)?.shadowRoot
-    expect(root?.querySelector('h1')?.textContent).toBe('DSH Desktop を起動中')
+    expect(root?.querySelector('h1')?.textContent).toBe('COWIN Harness Desktop を起動中')
     timers.fire()
     expect(root?.querySelector('h1')?.textContent).toBe('起動に通常より時間がかかっています')
     doc.documentElement.lang = 'de'
@@ -104,10 +104,10 @@ describe('boot cover lifecycle', () => {
     expect(harness.doc.querySelectorAll(`#${BOOT_COVER_ID}`)).toHaveLength(1)
     expect(repeat).toBe(harness.cover)
     const shadow = first?.shadowRoot
-    expect(shadow?.querySelector('h1')?.textContent).toBe('Starting DSH Desktop')
+    expect(shadow?.querySelector('h1')?.textContent).toBe('Starting COWIN Harness Desktop')
     expect(shadow?.querySelector('img.mark')?.getAttribute('src')).toBe(BOOT_COVER_MARK_URL)
     expect(shadow?.querySelectorAll('img')).toHaveLength(1)
-    expect(BOOT_COVER_MARK_URL).toBe('dsh-desktop://desktop/startup-whale.gif')
+    expect(BOOT_COVER_MARK_URL).toBe('dsh-desktop://desktop/startup-brand.svg')
     expect(shadow?.querySelector('.markFrame')?.getAttribute('aria-hidden')).toBe('true')
 
     const desktop = document.implementation.createHTMLDocument()
@@ -129,7 +129,7 @@ describe('boot cover lifecycle', () => {
     })
     expect(doc.body).toBeNull()
     const painted = doc.getElementById(BOOT_COVER_ID)
-    expect(painted?.shadowRoot?.querySelector('h1')?.textContent).toBe('正在启动 DSH Desktop')
+    expect(painted?.shadowRoot?.querySelector('h1')?.textContent).toBe('正在启动 COWIN Harness Desktop')
     expect(painted?.shadowRoot?.querySelector('img.mark')?.getAttribute('src')).toBe(BOOT_COVER_MARK_URL)
     expect(doc.getElementById(BOOT_COVER_STYLE_ID)?.textContent).toContain('body, body *')
 
@@ -150,7 +150,7 @@ describe('boot cover lifecycle', () => {
 
   it('uses the Chinese startup copy', () => {
     const { doc, cover } = mountHarnessCover({ locale: 'zh' })
-    expect(doc.getElementById(BOOT_COVER_ID)?.shadowRoot?.querySelector('h1')?.textContent).toBe('正在启动 DSH Desktop')
+    expect(doc.getElementById(BOOT_COVER_ID)?.shadowRoot?.querySelector('h1')?.textContent).toBe('正在启动 COWIN Harness Desktop')
     cover?.dispose()
   })
 
@@ -159,13 +159,13 @@ describe('boot cover lifecycle', () => {
     const root = doc.getElementById(BOOT_COVER_ID)
     const css = root?.shadowRoot?.querySelector('style')?.textContent ?? ''
     expect(root?.style.background).toBe('rgb(251, 251, 251)')
-    expect(css).toContain('aspect-ratio:480 / 276')
+    expect(css).toContain('aspect-ratio:742 / 378')
     expect(css).toContain('width:min(280px, 100%)')
     expect(css).toContain('translateY(-80px)')
     expect(css).not.toContain('pixelated')
     expect(css).not.toContain('brightness')
     expect(root?.hasAttribute('data-stalled')).toBe(false)
-    expect(root?.shadowRoot?.querySelector('.startupCopy h1')?.textContent).toBe('Starting DSH Desktop')
+    expect(root?.shadowRoot?.querySelector('.startupCopy h1')?.textContent).toBe('Starting COWIN Harness Desktop')
     cover?.dispose()
   })
 

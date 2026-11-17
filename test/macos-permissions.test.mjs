@@ -17,7 +17,7 @@ async function signingOptions() {
   require('app-builder-lib')
   const { MacTargetHelper } = require('app-builder-lib/out/mac/MacTargetHelper.js')
   const helper = new MacTargetHelper({ resourceList: Promise.resolve([]), platformSpecificBuildOptions: build.mac })
-  return { mac: build.mac, options: await helper.getOptionsForFile('/fixture/DSH Desktop.app', false, build.mac) }
+  return { mac: build.mac, options: await helper.getOptionsForFile('/fixture/COWIN Harness Desktop.app', false, build.mac) }
 }
 
 const audio = '<?xml version="1.0"?><plist version="1.0"><dict><key>com.apple.security.device.audio-input</key><true/></dict></plist>'
@@ -27,7 +27,7 @@ describe('macOS microphone packaging', () => {
     const { mac, options } = await signingOptions()
     expect(mac.hardenedRuntime).toBe(true)
     expect(mac.extendInfo.NSMicrophoneUsageDescription).toMatch(/microphone.*transcribe/i)
-    for (const target of ['/fixture/DSH Desktop.app', '/fixture/DSH Desktop.app/Contents/Frameworks/DSH Desktop Helper.app']) {
+    for (const target of ['/fixture/COWIN Harness Desktop.app', '/fixture/COWIN Harness Desktop.app/Contents/Frameworks/COWIN Harness Desktop Helper.app']) {
       const selected = options(target)
       expect(selected.hardenedRuntime).toBe(true)
       expect(selected.entitlements).toBe('build/entitlements.mac.plist')
@@ -42,20 +42,20 @@ describe('macOS microphone packaging', () => {
   })
 
   it('checks signed main and helper bundles, rejecting missing audio capability or description', async () => {
-    const list = vi.fn(async () => ['Electron Framework.framework', 'DSH Desktop Helper.app', 'DSH Desktop Helper (Renderer).app'])
+    const list = vi.fn(async () => ['Electron Framework.framework', 'COWIN Harness Desktop Helper.app', 'COWIN Harness Desktop Helper (Renderer).app'])
     const run = vi.fn(async command => ({ stdout: command.endsWith('PlistBuddy') ? 'Microphone for speech input' : audio }))
-    await verifyMacOSMicrophonePermissions('/fixture/DSH Desktop.app', { run, list })
+    await verifyMacOSMicrophonePermissions('/fixture/COWIN Harness Desktop.app', { run, list })
     expect(run.mock.calls.filter(([command]) => command.endsWith('codesign'))).toHaveLength(3)
     run.mockImplementation(async (command, args) => ({ stdout: command.endsWith('PlistBuddy')
       ? 'Microphone for speech input'
       : args.at(-1).endsWith('Helper.app') ? audio.replace('<true/>', '<false/>') : audio }))
-    await expect(verifyMacOSMicrophonePermissions('/fixture/DSH Desktop.app', { run, list })).rejects.toThrow('Helper.app')
+    await expect(verifyMacOSMicrophonePermissions('/fixture/COWIN Harness Desktop.app', { run, list })).rejects.toThrow('Helper.app')
     run.mockResolvedValue({ stdout: '' })
-    await expect(verifyMacOSMicrophonePermissions('/fixture/DSH Desktop.app', { run, list })).rejects.toThrow('description is empty')
+    await expect(verifyMacOSMicrophonePermissions('/fixture/COWIN Harness Desktop.app', { run, list })).rejects.toThrow('description is empty')
     run.mockRejectedValue(new Error('codesign failed'))
-    await expect(verifyMacOSMicrophonePermissions('/fixture/DSH Desktop.app', { run, list })).rejects.toThrow('codesign failed')
+    await expect(verifyMacOSMicrophonePermissions('/fixture/COWIN Harness Desktop.app', { run, list })).rejects.toThrow('codesign failed')
     run.mockResolvedValue({ stdout: 'description' })
-    await expect(verifyMacOSMicrophonePermissions('/fixture/DSH Desktop.app', { run, list: async () => [] })).rejects.toThrow('no Electron helpers')
+    await expect(verifyMacOSMicrophonePermissions('/fixture/COWIN Harness Desktop.app', { run, list: async () => [] })).rejects.toThrow('no Electron helpers')
   })
 
   it.runIf(process.platform === 'darwin')('verifies real Hardened Runtime signatures produced with the configured entitlement files', async () => {
@@ -66,9 +66,9 @@ describe('macOS microphone packaging', () => {
       const executable = path.join(directory, 'probe')
       await writeFile(source, 'int main(void) { return 0; }\n')
       await exec('/usr/bin/clang', [source, '-o', executable])
-      const app = path.join(directory, 'DSH Desktop.app')
+      const app = path.join(directory, 'COWIN Harness Desktop.app')
       const helpers = path.join(app, 'Contents', 'Frameworks')
-      for (const [index, bundle] of [app, path.join(helpers, 'DSH Desktop Helper.app'), path.join(helpers, 'DSH Desktop Helper (Renderer).app')].entries()) {
+      for (const [index, bundle] of [app, path.join(helpers, 'COWIN Harness Desktop Helper.app'), path.join(helpers, 'COWIN Harness Desktop Helper (Renderer).app')].entries()) {
         await mkdir(path.join(bundle, 'Contents', 'MacOS'), { recursive: true })
         await writeFile(path.join(bundle, 'Contents', 'Info.plist'),
           '<?xml version="1.0"?><plist version="1.0"><dict>'
@@ -79,9 +79,9 @@ describe('macOS microphone packaging', () => {
       }
       // Sign inside out, just as the actual application packaging does.
       for (const [bundle, target] of [
-        [path.join(helpers, 'DSH Desktop Helper.app'), '/fixture/helper.app'],
-        [path.join(helpers, 'DSH Desktop Helper (Renderer).app'), '/fixture/renderer.app'],
-        [app, '/fixture/DSH Desktop.app']
+        [path.join(helpers, 'COWIN Harness Desktop Helper.app'), '/fixture/helper.app'],
+        [path.join(helpers, 'COWIN Harness Desktop Helper (Renderer).app'), '/fixture/renderer.app'],
+        [app, '/fixture/COWIN Harness Desktop.app']
       ]) {
         await exec('/usr/bin/codesign', ['--force', '--sign', '-', '--options', 'runtime', '--timestamp=none', '--entitlements', path.join(root, options(target).entitlements), bundle])
       }
@@ -89,7 +89,7 @@ describe('macOS microphone packaging', () => {
       // The same gate must catch the regression in an actual signed helper.
       const noAudio = path.join(directory, 'no-audio.plist')
       await writeFile(noAudio, '<?xml version="1.0"?><plist version="1.0"><dict/></plist>')
-      await exec('/usr/bin/codesign', ['--force', '--sign', '-', '--options', 'runtime', '--timestamp=none', '--entitlements', noAudio, path.join(helpers, 'DSH Desktop Helper.app')])
+      await exec('/usr/bin/codesign', ['--force', '--sign', '-', '--options', 'runtime', '--timestamp=none', '--entitlements', noAudio, path.join(helpers, 'COWIN Harness Desktop Helper.app')])
       await expect(verifyMacOSMicrophonePermissions(app)).rejects.toThrow('Helper.app')
     } finally {
       await rm(directory, { recursive: true, force: true })

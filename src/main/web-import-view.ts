@@ -44,12 +44,12 @@ export function buildWebImportViewModel(options: {
 
   return {
     locale: options.locale,
-    brand: 'DSH Desktop',
+    brand: 'COWIN Harness Desktop',
     badge: zh ? '导入' : 'Import',
     heading: zh ? '发现网页版数据' : 'Web Harness data found',
     summary: zh
-      ? '本机已有 DeepSeek Harness 网页版数据。导入后桌面与网页版各自独立，网页版数据不会被改写。'
-      : 'This computer already has DeepSeek Harness web data. Import copies it once; the web home is left unchanged and the two copies stay independent.',
+      ? '本机已有网页版 Harness 数据。导入后桌面与网页版各自独立，网页版数据不会被改写。'
+      : 'This computer already has web Harness data. Import copies it once; the web home is left unchanged and the two copies stay independent.',
     stats,
     plugins,
     pluginsLabel: plugins.length > 0

@@ -211,7 +211,7 @@ describe('profile pnpm shim and failure reporting', () => {
 
   it('quotes the console-hide bootstrap in the Windows pnpm shim', async () => {
     const home = join(__dirname, '.temp-profile-plugin-command-console-hide')
-    const bootstrap = 'C:\\Program Files (x86)\\DSH Desktop\\resources\\windows-hide-console-import.mjs'
+    const bootstrap = 'C:\\Program Files (x86)\\COWIN Harness Desktop\\resources\\windows-hide-console-import.mjs'
     try {
       await ensureProfilePnpmShim({
         dshHome: home,
@@ -249,13 +249,13 @@ describe('buildProfilePluginCommandEnvironment', () => {
     const windows = buildProfilePluginCommandEnvironment(
       { Path: 'C:\\Windows\\System32' },
       'C:\\shim',
-      'C:\\DSH Desktop\\DSH Desktop.exe',
+      'C:\\COWIN Harness Desktop\\COWIN Harness Desktop.exe',
       'win32'
     )
     const mac = buildProfilePluginCommandEnvironment(
       { PATH: '/usr/bin' },
       '/shim',
-      '/Applications/DSH Desktop.app/Contents/Frameworks/DSH Desktop Helper.app/Contents/MacOS/DSH Desktop Helper',
+      '/Applications/COWIN Harness Desktop.app/Contents/Frameworks/COWIN Harness Desktop Helper.app/Contents/MacOS/COWIN Harness Desktop Helper',
       'darwin'
     )
     expect(windows.ELECTRON_RUN_AS_NODE).toBe('1')

@@ -7,7 +7,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'none'; img-src 'self' file:; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
     />
-    <title>DSH Desktop Safe Mode</title>
+    <title>COWIN Harness Desktop Safe Mode</title>
     <style>
       :root {
         /* Same reading column as the recovery page. */
@@ -17,7 +17,7 @@
         --canvas: #f7f7f8; --surface: #fff; --soft: #f5f6f7; --ink: #18181b;
         --muted: #71717a; --line: #e4e4e7; --strong: #d4d4d8;
         --button: #18181b; --button-ink: #fff; --danger: #c33b38; --warning: #a45b00; --success: #267a4a;
-        --accent: #2468f2;
+        --accent: #0052d9;
       }
       * { box-sizing: border-box; }
       [hidden] { display: none !important; }
@@ -117,8 +117,8 @@
       .wechat-popover p { margin: 10px 0 0; line-height: 1.5; }
       .quit { min-height: 32px; padding: 5px 9px; border: 0; border-radius: 8px; color: var(--muted); background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; }
       .quit:hover { color: var(--ink); background: var(--soft); }
-      :root[data-theme="dark"] { --canvas:#141416; --surface:#202023; --soft:#29292d; --ink:#f2f2f4; --muted:#a5a7ad; --line:#3a3a3f; --strong:#4a4a50; --button:#f4f4f5; --button-ink:#111217; --danger:#ee7772; --success:#78d59a; --accent:#5b96f7; }
-      @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --canvas:#141416; --surface:#202023; --soft:#29292d; --ink:#f2f2f4; --muted:#a5a7ad; --line:#3a3a3f; --strong:#4a4a50; --button:#f4f4f5; --button-ink:#111217; --danger:#ee7772; --success:#78d59a; --accent:#5b96f7; } }
+      :root[data-theme="dark"] { --canvas:#141416; --surface:#202023; --soft:#29292d; --ink:#f2f2f4; --muted:#a5a7ad; --line:#3a3a3f; --strong:#4a4a50; --button:#f4f4f5; --button-ink:#111217; --danger:#ee7772; --success:#78d59a; --accent:#366ef4; }
+      @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --canvas:#141416; --surface:#202023; --soft:#29292d; --ink:#f2f2f4; --muted:#a5a7ad; --line:#3a3a3f; --strong:#4a4a50; --button:#f4f4f5; --button-ink:#111217; --danger:#ee7772; --success:#78d59a; --accent:#366ef4; } }
       @media (max-height: 680px) { .content { padding: 16px 24px; } .summary { font-size: 13px; margin-bottom: 6px; } .list-card { margin-top: 10px; } .actions { margin-top: 14px; } }
       @media (max-width: 620px) { .header { padding-inline: 20px; } .content { padding: 24px 20px 16px; } .actions { flex-direction:column-reverse; } .button { width:100%; } .footer { padding-inline:20px; } }
       .agent-link { flex-shrink: 0; align-self: flex-start; margin: -6px 0 0; padding: 0; border: 0; color: var(--accent); background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: currentColor; }
@@ -221,7 +221,7 @@
       const model = JSON.parse(params.get('state') || '{}')
       document.documentElement.lang = model.locale === 'zh' ? 'zh-CN' : 'en'
       document.documentElement.dataset.theme = params.get('theme') || 'system'
-      document.title = `${model.badge || 'Safe Mode'} · ${model.brand || 'DSH Desktop'}`
+      document.title = `${model.badge || 'Safe Mode'} · ${model.brand || 'COWIN Harness Desktop'}`
       const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value || '' }
       setText('page-title', model.locale === 'zh' ? '维修模式 · 安全模式' : 'Repair · Safe Mode')
       setText('heading', model.heading)
@@ -234,10 +234,10 @@
       setText('quit', model.quitLabel)
       setText('community-label', model.locale === 'zh' ? '遇到问题？来社区交流' : 'Need help? Join our community')
       setText('community-wechat-label', model.locale === 'zh' ? '微信群' : 'WeChat')
-      setText('wechat-caption', model.locale === 'zh' ? '扫码加入 DSH 用户群' : 'Scan to join the DSH community')
+      setText('wechat-caption', model.locale === 'zh' ? '扫码加入 COWIN 用户群' : 'Scan to join the DSH community')
       const wechat = document.getElementById('community-wechat')
       const wechatPopover = document.getElementById('wechat-popover')
-      document.getElementById('wechat-qr').alt = model.locale === 'zh' ? 'DSH 用户群二维码' : 'DSH community WeChat QR code'
+      document.getElementById('wechat-qr').alt = model.locale === 'zh' ? 'COWIN 用户群二维码' : 'DSH community WeChat QR code'
       let wechatCloseTimer
       const positionWechat = () => {
         const anchor = wechat.getBoundingClientRect()

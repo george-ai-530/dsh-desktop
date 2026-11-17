@@ -1,6 +1,6 @@
 # Workbench Market Acceptance Standard
 
-Version: 2026-09-29 · The website is authoritative; DSH Desktop bundles a copy for offline use.
+Version: 2026-09-29 · The website is authoritative; COWIN Harness Desktop bundles a copy for offline use.
 
 Official page: https://dshdesktop.com/workbench/docs/market-acceptance-en/
 
@@ -10,7 +10,7 @@ Before development or submission, see the [six-step quickstart](https://dshdeskt
 
 This document applies only when an author **wants to list a workbench in the Workbench Market**. For a workbench developed and used locally, meeting the [Workbench Development Standard](https://dshdesktop.com/workbench/docs/development-en/) and passing the local self-test is enough. There is no need to read this document, publish code, or upload materials.
 
-Listing follows the DSH plugin market model: the author places code in their own public GitHub repository and submits one listing PR to [awesome-dsh-workbench](https://github.com/dataelement/awesome-dsh-workbench). Descriptions and screenshots are needed only at this stage. The listing YAML and client index fields are defined by that repository's `catalog/README.md` and `schema/`; this document describes author and review requirements without redefining the fields.
+Listing follows the COWIN Harness Desktop plugin market model: the author places code in their own public GitHub repository and submits one listing PR to [awesome-dsh-workbench](https://github.com/dataelement/awesome-dsh-workbench). Descriptions and screenshots are needed only at this stage. The listing YAML and client index fields are defined by that repository's `catalog/README.md` and `schema/`; this document describes author and review requirements without redefining the fields.
 
 Rule levels are **required** (failure prevents listing or installation), **recommended**, and **optional**.
 
@@ -18,7 +18,7 @@ Rule levels are **required** (failure prevents listing or installation), **recom
 
 - A market submission is a separate user intent. Generic development instructions, discovery of an existing workbench, or completion of local development do not authorize publication or submission. Without an explicit listing request, stop at local delivery. If the development goal is unclear, use the requirements confirmation gate in the Development Standard first.
 - **Required**: Meet every required item in the Development Standard and pass its local self-test checklist.
-- **Required**: Install and actually open the workbench in a real DSH Desktop. Record the tested Desktop version, OS, and architecture. Do not claim compatibility with untested platforms.
+- **Required**: Install and actually open the workbench in a real COWIN Harness Desktop. Record the tested Desktop version, OS, and architecture. Do not claim compatibility with untested platforms.
 - Before submitting, check the actual evidence: final installation source and version, package verification, Desktop installation and opening records, self-test results, and corresponding screenshots. Mark unsupported claims “unverified” and complete verification first. An agent plan, successful build, or expectation that a package should install is not evidence of acceptance and must not be used to submit a public PR as “passed.”
 
 ## 2. Listing process
@@ -46,12 +46,12 @@ After opening the PR, inspect every check and actual log for its latest commit. 
 
 ## 3. Repository and code requirements
 
-As in the DSH plugin market:
+As in the COWIN Harness Desktop plugin market:
 
 - **Required**: The author's own public GitHub repository with a license. A private repository cannot enter the public market, but may be used locally or within a team.
 - **Required**: Declare `dsh.bundle`. A package containing only `dsh.client` is not installable and will not be listed.
 - **Required**: Real usable code. Placeholder, README-only, and name-squatting repositories are not accepted. Maintain the project; long-broken or archived listings may be reviewed.
-- Aggregator packages containing only dependencies and copies of DSH itself are not accepted.
+- Aggregator packages containing only dependencies and copies of COWIN Harness Desktop itself are not accepted.
 - Dependencies **must** point to the original author's repository or published npm package. Do not reupload someone else's plugin under your own name and depend on it.
 - No obfuscated code, credential theft, or unexpected installation behavior.
 
@@ -113,9 +113,9 @@ Do not put version, npm package name, checksums, or author ID in the YAML; these
 
 In the PR description, state the workbench purpose, local acceptance results, tested Desktop version and platform, installation source, and noteworthy external dependencies, network access, and data locations.
 
-### Differences from the DSH plugin market
+### Differences from the COWIN Harness Desktop plugin market
 
-| Item | DSH plugin market | Workbench Market |
+| Item | COWIN Harness Desktop plugin market | Workbench Market |
 |---|---|---|
 | Listing repository | `awesome-dsh-plugin` | `dataelement/awesome-dsh-workbench` |
 | File | `data/plugins/<owner>__<repo>.yml` | `data/workbenches/<owner>__<repo>.yml` |
@@ -156,6 +156,6 @@ Checks unfinished due to network or quota are “incomplete,” not “passed.�
 
 ## References
 
-- DSH plugin market listing rules: [awesome-dsh-plugin contributing.md](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/blob/main/contributing.md), [dsh-market](https://github.com/dsh-market/dsh-market).
+- COWIN Harness Desktop plugin market listing rules: [awesome-dsh-plugin contributing.md](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/blob/main/contributing.md), [dsh-market](https://github.com/dsh-market/dsh-market).
 - Workbench Market listing format: `catalog/README.md` and `schema/` in [awesome-dsh-workbench](https://github.com/dataelement/awesome-dsh-workbench).
 - Development rules: [Workbench Development Standard](https://dshdesktop.com/workbench/docs/development-en/).

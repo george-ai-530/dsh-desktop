@@ -12,7 +12,7 @@ import {
   hideConsoleImportArguments
 } from 'dsh-desktop-market-installer/windows-hide-console'
 
-const bootstrap = 'C:\\Program Files (x86)\\DSH Desktop\\resources\\windows-hide-console-import.mjs'
+const bootstrap = 'C:\\Program Files (x86)\\COWIN Harness Desktop\\resources\\windows-hide-console-import.mjs'
 
 describe('windows console hide launch arguments', () => {
   it('rejects paths that a quoted cmd assignment cannot carry', () => {

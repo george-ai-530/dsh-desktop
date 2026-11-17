@@ -19,7 +19,7 @@ afterEach(async () => {
 })
 
 const appFacts = {
-  name: 'DSH Desktop Shell',
+  name: 'COWIN Harness Desktop Shell',
   version: '0.0.0',
   platform: 'darwin',
   arch: 'arm64',

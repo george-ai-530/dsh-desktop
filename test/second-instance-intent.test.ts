@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { isUserInitiatedInstance } from '../src/main/launchd-guard'
 
-const mainBinary = '/Applications/DSH Desktop.app/Contents/MacOS/DSH Desktop'
+const mainBinary = '/Applications/COWIN Harness Desktop.app/Contents/MacOS/COWIN Harness Desktop'
 const helperBinary =
-  '/Applications/DSH Desktop.app/Contents/Frameworks/DSH Desktop Helper.app/Contents/MacOS/DSH Desktop Helper'
+  '/Applications/COWIN Harness Desktop.app/Contents/Frameworks/COWIN Harness Desktop Helper.app/Contents/MacOS/COWIN Harness Desktop Helper'
 
 describe('second instance intent', () => {
   it('treats a plain application launch as the user asking for the window', () => {

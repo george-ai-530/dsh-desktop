@@ -1,10 +1,10 @@
 <h1 align="center">
-  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="Logotipo de DSH Desktop" valign="middle" />
-  DSH Desktop
+  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="Logotipo de COWIN Desktop" valign="middle" />
+  COWIN Desktop
 </h1>
 
 <p align="center">
-  <strong>DSH Desktop by Dataelem</strong> es una aplicación Agent de escritorio desarrollada por el equipo de Dataelem sobre el framework DeepSeek Harness, disponible en ediciones de código abierto y <a href="https://www.dshdesktop.com/es/enterprise/">empresarial</a>.<br />
+  <strong>COWIN Desktop by Dataelem</strong> es una aplicación Agent de escritorio desarrollada por el equipo de Dataelem sobre el framework DeepSeek Harness, disponible en ediciones de código abierto y <a href="https://www.dshdesktop.com/es/enterprise/">empresarial</a>.<br />
   Sitio web oficial：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a>
 </p>
 
@@ -18,27 +18,29 @@
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
 
-![DSH Desktop con Preset portátiles, proveedores de modelos, control desde el teléfono y generación de PPTX editables](docs/images/dsh-desktop-hero-v021.png)
+![COWIN Desktop con Preset portátiles, proveedores de modelos, control desde el teléfono y generación de PPTX editables](docs/images/dsh-desktop-hero-v021.png)
+
+> Nota: la captura siguiente es de la marca anterior (DSH Desktop); los elementos de marca ya son de COWIN. La captura se actualizará más adelante.
 
 Basado en DeepSeek Harness, con mejoras en la integración de modelos, plantillas de Word / Excel / PPT, recuperación de inicio y aplicaciones Workbench.
 
 ## Descarga
 
-Descarga DSH Desktop desde el [sitio web oficial](https://www.dshdesktop.com/es/).
+Descarga COWIN Desktop desde el [sitio web oficial](https://www.dshdesktop.com/es/).
 
-DSH Desktop busca actualizaciones automáticamente. Las nuevas versiones se distribuyen primero a un grupo limitado de usuarios para probarlas y, una vez confirmada su estabilidad, se ofrecen a todos los usuarios.
+COWIN Desktop busca actualizaciones automáticamente. Las nuevas versiones se distribuyen primero a un grupo limitado de usuarios para probarlas y, una vez confirmada su estabilidad, se ofrecen a todos los usuarios.
 
 ## Comunidad
 
 <p align="center">
-  Escanea el siguiente código QR con WeChat para unirte al grupo de DSH Desktop.<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="Código QR del grupo de DSH Desktop en WeChat" /><br />
-  También puedes unirte a la <a href="https://discord.gg/7Xgf3qe3Qp">comunidad de DSH Desktop en Discord</a>.
+  Escanea el siguiente código QR con WeChat para unirte al grupo de COWIN Desktop.<br />
+  <img src="docs/images/wechat-group-20260815.png" width="220" alt="Código QR del grupo de COWIN Desktop en WeChat" /><br />
+  También puedes unirte a la <a href="https://discord.gg/7Xgf3qe3Qp">comunidad de COWIN Desktop en Discord</a>.
 </p>
 
-## Qué añade DSH Desktop
+## Qué añade COWIN Desktop
 
-DeepSeek Harness proporciona el Agent Runtime, la Web UI y la conexión básica con modelos. DSH Desktop amplía estas bases con:
+DeepSeek Harness proporciona el Agent Runtime, la Web UI y la conexión básica con modelos. COWIN Desktop amplía estas bases con:
 
 - **Integración de modelos**: configuración inicial mejorada, búsqueda de modelos, configuración de entrada de imágenes y razonamiento, y compatibilidad con modelos externos.
 - **Plantillas de Office**: edición de plantillas nativas de Word, libros de ejemplo de Excel y plantillas PPT editables, junto con habilidades de negocio para crear DOCX, XLSX y PPTX; Python y dependencias de Office incluidos.
@@ -74,7 +76,7 @@ Si Cloudflare no se inicia, la aplicación intenta usar Pinggy. Si aparece el en
 
 ## Modo seguro y recuperación
 
-Si un plugin de terceros impide el inicio o la visualización, DSH Desktop relaciona la evidencia del Runtime y del frontend con los plugins instalados y abre una recuperación guiada.
+Si un plugin de terceros impide el inicio o la visualización, COWIN Desktop relaciona la evidencia del Runtime y del frontend con los plugins instalados y abre una recuperación guiada.
 
 Elige **Restart as Safe Mode…** en el menú `Harness` para bloquear temporalmente plugins externos y conservar el Agent, las sesiones, los modelos y los espacios de trabajo. Desactiva el plugin problemático en la pantalla de gestión y reinicia normalmente para comprobar la recuperación. Desactivarlo no elimina el plugin ni los datos y puedes volver a activarlo después.
 
@@ -83,7 +85,7 @@ La pantalla de recuperación busca actualizaciones compatibles de los plugins y 
 Si no puedes abrir la interfaz normal, inicia la aplicación con `--safe-mode`. En macOS:
 
 ```sh
-open -a "DSH Desktop" --args --safe-mode
+open -a "COWIN Desktop" --args --safe-mode
 ```
 
 ## Datos locales y seguridad
@@ -120,12 +122,12 @@ Antes de enviar cambios, ejecuta `npm test`, `npm run typecheck` y `npm run buil
 
 ## Licencia
 
-DSH Desktop se publica bajo la [licencia MIT](LICENSE).
+COWIN Desktop se publica bajo la [licencia MIT](LICENSE).
 
-DeepSeek Harness y sus dependencias siguen sujetos a sus licencias y políticas de marcas correspondientes. DSH Desktop es una aplicación de escritorio comunitaria independiente.
+DeepSeek Harness y sus dependencias siguen sujetos a sus licencias y políticas de marcas correspondientes. COWIN Desktop es una aplicación de escritorio comunitaria independiente.
 
 ## Conoce la edición empresarial
 
-La edición empresarial combina el cliente de escritorio BISHENG con el servidor de la plataforma empresarial BISHENG. El cliente, basado en DSH Desktop, permite trabajar con archivos locales y modelos, conocimiento, herramientas y habilidades autorizados mediante una cuenta empresarial. El servidor configura recursos y permisos de forma centralizada y gestiona créditos y uso. Tanto el cliente como el servidor BISHENG de la edición empresarial son de código abierto; su código fuente está disponible en los repositorios siguientes.
+La edición empresarial combina el cliente de escritorio BISHENG con el servidor de la plataforma empresarial BISHENG. El cliente, basado en COWIN Desktop, permite trabajar con archivos locales y modelos, conocimiento, herramientas y habilidades autorizados mediante una cuenta empresarial. El servidor configura recursos y permisos de forma centralizada y gestiona créditos y uso. Tanto el cliente como el servidor BISHENG de la edición empresarial son de código abierto; su código fuente está disponible en los repositorios siguientes.
 
 [Código de la plataforma de gestión empresarial](https://github.com/dataelement/bisheng) · [Repositorio del cliente empresarial](https://github.com/dataelement/bisheng-desktop) · [Acerca de la edición empresarial](https://www.dshdesktop.com/es/enterprise/)

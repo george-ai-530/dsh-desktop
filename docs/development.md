@@ -1,4 +1,4 @@
-# DSH Desktop development guide
+# COWIN Desktop development guide
 
 This guide covers local development, validation, patch maintenance, and target-native packaging. For the runtime design, see [Architecture](architecture.md). For formal releases, see the [release runbook](release-runbook.md).
 
@@ -23,7 +23,7 @@ npm run dev
 
 `npm run dev` prepares the Office runtime and templates, prepares PPT, then starts the Electron shell and Host. Unpackaged launches default to `<repository>/.build/office-runtime/primary-runtime`, the output of `office:prepare`; `DSH_DESKTOP_PRIMARY_RUNTIME_DIR` is optional and only needed to test a different runtime. Installed packages always use `Resources/office-runtime/primary-runtime` and ignore that development override.
 
-Development builds use the separate application name `DSH Desktop Dev` and the separate user-data directory `dsh-desktop-dev`, so they do not reuse production DSH Desktop data. Multiple development worktrees still share that development profile by default; avoid running them at the same time when testing profile, plugin, migration, or recovery changes.
+Development builds use the separate application name `COWIN Desktop Dev` and the separate user-data directory `dsh-desktop-dev`, so they do not reuse production COWIN Desktop data. Multiple development worktrees still share that development profile by default; avoid running them at the same time when testing profile, plugin, migration, or recovery changes.
 
 To run another worktree concurrently, set a distinct `DSH_DEV_PROFILE` directory name and unused loopback ports using `DSH_DEV_HARNESS_PORT` and `DSH_DEV_MOBILE_PORT`. For example, on macOS:
 
@@ -102,6 +102,8 @@ test/                     Unit and source-contract regression coverage
 The desktop product intentionally reuses the upstream Harness UI. Desktop-specific provider onboarding, preset transfer, model selection, workspace, branding, and layout changes are captured under `patches/` rather than stored as untracked edits in `node_modules`.
 
 The `@deepseek-ai/dsh-host-open-in-app@0.2.1-rc.3` patch carries forward the V0.12.2 adaptation of [PR #709](https://github.com/dataelement/dsh-desktop/pull/709) for [#686](https://github.com/dataelement/dsh-desktop/issues/686), originally targeting `0.2.0-rc.2`. Detached external app launches remove inherited `ELECTRON_RUN_AS_NODE` names case-insensitively before merging the adapter's explicit environment. GitHub Desktop's Windows CLI adapter keeps its explicit Node mode; the shared subprocess scrub and internal runners remain unchanged. `test/open-in-app-environment.test.ts` exercises the installed bundle, emitted resolver, and host route; set `DSH_TEST_OPEN_IN_ELECTRON=1` to include native Electron checks with disposable data directories and no application window. Run these tests with standalone Node, not Electron in Node mode, because their Node child fixtures use `process.execPath`. Remove the patch when the pinned upstream package provides equivalent behavior in both artifacts. Validate native Windows Open In when replaying or retiring it.
+
+The `@deepseek-ai/dsh-client-ui-theme@0.2.2-rc.1` patch implements the COWIN brand accent. Upstream hard-codes the brand-hue scale, so the patch wraps the `--dsw-static-deepseek-400/450/500` definitions in both the light (`body{}`) and dark (`body[data-ds-dark-theme]{}`) blocks so each reads a Desktop-owned override variable (`--dsh-desktop-accent-*`, with `-dark` variants in the dark block) and falls back to the original upstream values when the plugin is absent. The patch carries no colors: the COWIN values live in `packages/dsh-desktop-client-ui/client.js`, and `test/branding-accent.test.ts` asserts both halves of the seam. The pale tint and dark shade steps of the scale intentionally keep upstream values because they already read as a compatible blue family next to the COWIN accents. Remove the patch when upstream exposes an official theme-override seam or ships the COWIN palette itself; when replaying or retiring it, verify primary buttons, links, and focus rings in both themes on the real page.
 
 When upgrading Harness:
 

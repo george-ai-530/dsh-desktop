@@ -205,7 +205,7 @@ function createCtx(overrides: Partial<CtxHarness> = {}): { ctx: CtxHarness; regi
   return { ctx, registrations }
 }
 
-describe('DSH Desktop onboarding wizard', () => {
+describe('COWIN Harness Desktop onboarding wizard', () => {
   it('shows a single notice modal that links straight to the models settings', () => {
     const source = readFileSync(
       path.join(projectRoot, 'packages', 'dsh-desktop-onboarding', 'client.js'),
@@ -219,7 +219,10 @@ describe('DSH Desktop onboarding wizard', () => {
     expect(source).toContain('https://github.com/dataelement/dsh-desktop\'')
     expect(source).not.toContain('dsh-desktop/issues')
     expect(source).toContain('GITHUB_MARK_PATH')
-    expect(source).toContain('IconGlobeOutlineRegular')
+    // The official-site entry was removed with the COWIN rebrand; the GitHub
+    // repo is the only external link the notice keeps.
+    expect(source).not.toContain('IconGlobeOutlineRegular')
+    expect(source).not.toContain('officialSite')
   })
 
   it('registers the desktop notice as the only onboarding step', () => {
@@ -317,7 +320,7 @@ describe('DSH Desktop onboarding wizard', () => {
   })
 })
 
-describe('DSH Desktop onboarding composition', () => {
+describe('COWIN Harness Desktop onboarding composition', () => {
   it('shows the first-run notice at launch rather than only on a blank conversation', async () => {
     const [patch, installed] = await Promise.all([
       readFile(patchPath('@deepseek-ai/dsh-client-ui-settings-general'), 'utf8'),
@@ -362,7 +365,7 @@ describe('DSH Desktop onboarding composition', () => {
   })
 })
 
-describe('DSH Desktop onboarding host eligibility', () => {
+describe('COWIN Harness Desktop onboarding host eligibility', () => {
   function createHostHarness() {
     const configure = vi.fn(() => () => undefined)
     const fiber = { uid: 1 }

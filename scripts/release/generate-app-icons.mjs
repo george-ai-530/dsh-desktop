@@ -3,6 +3,17 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createRequire } from 'node:module'
+
+// Regenerate build/icon.icns and build/icon.ico from build/app-icon.png.
+// Resizing uses sharp so this runs on every dev platform (sharp arrives via
+// the upstream dependency closure, same access pattern as
+// sync-brand-mark.mjs). The .icns step still needs macOS iconutil and
+// is skipped elsewhere — mac artifacts are built on macOS/CI, where this
+// script regenerates the icns.
+
+const require = createRequire(import.meta.url)
+const sharp = require('sharp')
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const buildDirectory = path.join(projectRoot, 'build')
@@ -11,43 +22,34 @@ const iconsetDirectory = path.join(buildDirectory, 'app-icon.iconset')
 const icnsDestination = path.join(buildDirectory, 'icon.icns')
 const icoDestination = path.join(buildDirectory, 'icon.ico')
 
-await rm(iconsetDirectory, { recursive: true, force: true })
-await mkdir(iconsetDirectory, { recursive: true })
-
-for (const size of [16, 32, 128, 256, 512]) {
-  execFileSync('sips', [
-    '-z',
-    String(size),
-    String(size),
-    source,
-    '--out',
-    path.join(iconsetDirectory, `icon_${size}x${size}.png`)
-  ])
-  execFileSync('sips', [
-    '-z',
-    String(size * 2),
-    String(size * 2),
-    source,
-    '--out',
-    path.join(iconsetDirectory, `icon_${size}x${size}@2x.png`)
-  ])
+async function resize(sourcePng, size, destination) {
+  await sharp(sourcePng)
+    .resize(size, size, { fit: 'fill' })
+    .png()
+    .toFile(destination)
 }
 
-execFileSync('iconutil', ['-c', 'icns', iconsetDirectory, '-o', icnsDestination])
+if (process.platform === 'darwin') {
+  await rm(iconsetDirectory, { recursive: true, force: true })
+  await mkdir(iconsetDirectory, { recursive: true })
+
+  for (const size of [16, 32, 128, 256, 512]) {
+    await resize(source, size, path.join(iconsetDirectory, `icon_${size}x${size}.png`))
+    await resize(source, size * 2, path.join(iconsetDirectory, `icon_${size}x${size}@2x.png`))
+  }
+
+  execFileSync('iconutil', ['-c', 'icns', iconsetDirectory, '-o', icnsDestination])
+  await rm(iconsetDirectory, { recursive: true, force: true })
+} else {
+  console.log('Skipping build/icon.icns: iconutil requires macOS. Run `npm run icons:generate` on macOS/CI before a mac release.')
+}
 
 const icoSizes = [16, 24, 32, 48, 64, 128, 256]
 const icoDirectory = await mkdtemp(path.join(os.tmpdir(), 'dsh-desktop-icons-'))
 const icoImages = []
 for (const size of icoSizes) {
   const destination = path.join(icoDirectory, `icon-${size}.png`)
-  execFileSync('sips', [
-    '-z',
-    String(size),
-    String(size),
-    source,
-    '--out',
-    destination
-  ])
+  await resize(source, size, destination)
   icoImages.push(await readFile(destination))
 }
 const header = Buffer.alloc(6 + icoImages.length * 16)

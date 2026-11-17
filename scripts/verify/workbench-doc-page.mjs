@@ -98,7 +98,7 @@ export function renderMarkdownBody(markdown) {
 }
 
 export function renderDocumentPage(markdown, { markdownUrl, language = 'zh-CN', alternatePageUrl }) {
-  const title = /^#\s+(.*)$/m.exec(markdown)?.[1] ?? (language === 'en' ? 'DSH workbench documentation' : 'DSH 工作台文档')
+  const title = /^#\s+(.*)$/m.exec(markdown)?.[1] ?? (language === 'en' ? 'COWIN Harness Desktop workbench documentation' : 'COWIN Harness Desktop 工作台文档')
   const alternateLanguage = language === 'en' ? 'zh-CN' : 'en'
   const alternateLabel = language === 'en' ? '中文' : 'English'
   return `<!doctype html>
@@ -106,7 +106,7 @@ export function renderDocumentPage(markdown, { markdownUrl, language = 'zh-CN', 
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escapeHtml(title)} — DSH Desktop</title>
+<title>${escapeHtml(title)} — COWIN Harness Desktop</title>
 <link rel="alternate" type="text/markdown" href="${escapeHtml(markdownUrl)}">
 ${alternatePageUrl ? `<link rel="alternate" hreflang="${alternateLanguage}" href="${escapeHtml(alternatePageUrl)}">` : ''}
 <style>

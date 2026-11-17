@@ -1,0 +1,10 @@
+<svg width="1000" height="1000" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- COWIN orbital mark (redrawn after the COWIN 珂阳 artwork). One filled
+     path so the loader GIF generator and the inline plugin copies can take
+     the `d` verbatim: a primary arc sweeping west -> north -> northeast with
+     a dot trail toward east on the shared orbit radius, a counter arc in the
+     southwest with a smaller trail, and a center node. Tight bounds inside
+     this 1000x1000 artwork: x 173.05  y 200  w 654.74  h 548.17  (aspect
+     ~1.194). -->
+<path fill="black" d="M 201.14 526.15 A 300 300 0 0 1 672.07 254.25 L 637.66 303.4 A 240 240 0 0 0 260.91 520.92 Z M 708.75 279.1 a 20 20 0 1 0 40 0 a 20 20 0 1 0 -40 0 Z M 758.4 341 a 17 17 0 1 0 34 0 a 17 17 0 1 0 -34 0 Z M 790.1 407.03 a 14 14 0 1 0 28 0 a 14 14 0 1 0 -28 0 Z M 805.79 472.28 a 11 11 0 1 0 22 0 a 11 11 0 1 0 -22 0 Z M 456.24 748.17 A 252 252 0 0 1 266.35 594.4 L 307.15 577.92 A 208 208 0 0 0 463.88 704.84 Z M 180.9 592.97 a 15 15 0 1 0 30 0 a 15 15 0 1 0 -30 0 Z M 173.09 544.26 a 12 12 0 1 0 24 0 a 12 12 0 1 0 -24 0 Z M 173.05 494.45 a 9 9 0 1 0 18 0 a 9 9 0 1 0 -18 0 Z M 460 500 a 40 40 0 1 0 80 0 a 40 40 0 1 0 -80 0 Z"/>
+</svg>

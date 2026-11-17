@@ -33,6 +33,19 @@ describe('Desktop account UI composition', () => {
       const shell = loadOverlayPatches('test', patch)
       const entries = composeEntries([base, web, shell])
       expect(entries.find((entry) => entry.id === 'ui-settings-account')?.disabled).toBe(true)
+      // A patch replaces the row's whole config: the shell overlay must restate
+      // every key the upstream web layer configures on the system-prompt row.
+      const upstreamSystemPromptKeys = Object.keys(composeEntries([base, web]).find((entry) => entry.id === 'system-prompt')?.config ?? {})
+      expect(upstreamSystemPromptKeys).not.toHaveLength(0)
+      const systemPromptConfig = entries.find((entry) => entry.id === 'system-prompt')?.config
+      expect(systemPromptConfig).toMatchObject({
+        includeHarnessIdentity: false,
+        personaPrefix: expect.stringContaining('COWIN Harness')
+      })
+      for (const key of upstreamSystemPromptKeys) {
+        expect(systemPromptConfig).toHaveProperty(key)
+      }
+      expect(entries.find((entry) => entry.id === 'harness-dev-context')?.disabled).toBe(true)
       expect(entries.find((entry) => entry.id === 'deepseek-account')?.config).toMatchObject({ desktopPlatform: null })
       expect(entries.find((entry) => entry.id === 'desktop-product-telemetry')?.disabled).toBe(true)
       expect(entries.find((entry) => entry.id === 'product-analytics')?.disabled).toBe(true)
@@ -62,6 +75,11 @@ describe('Desktop account UI composition', () => {
       expect(safeEntries.find((entry) => entry.id === 'dsh-desktop-market-installer')).toBeUndefined()
       expect(safeEntries.find((entry) => entry.id === 'dsh-desktop-office')).toBeUndefined()
       expect(safeEntries.find((entry) => entry.id === 'dsh-ppt-composer')).toBeUndefined()
+      expect(safeEntries.find((entry) => entry.id === 'system-prompt')?.config).toMatchObject({
+        includeHarnessIdentity: false,
+        personaPrefix: expect.stringContaining('COWIN Harness')
+      })
+      expect(safeEntries.find((entry) => entry.id === 'harness-dev-context')?.disabled).toBe(true)
       for (const name of ['@deepseek-ai/dsh-client-ui-settings-general', '@deepseek-ai/dsh-client-ui-settings-models']) {
         expect(entries.filter((entry) => entry.name === name && !entry.disabled)).toHaveLength(1)
       }

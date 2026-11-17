@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js
-index 96cd2e839f..9a77b48ce9 100644
+index 96cd2e8..ab822ba 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js
 @@ -1297,6 +1297,7 @@ window.__ModuleLoader__.load({
@@ -18,7 +18,21 @@ index 96cd2e839f..9a77b48ce9 100644
  			...guideZh,
  			builtInGroup: "内置",
  			customGroup: "自定义",
-@@ -2273,6 +2275,85 @@ window.__ModuleLoader__.load({
+@@ -1551,6 +1553,13 @@ window.__ModuleLoader__.load({
+ 			createPluginUnavailable: "Temporariamente indisponível. Reabra este menu para tentar novamente",
+ 			createPluginMissing: "O modo criador não está incluído nesta configuração"
+ 		};
++		/** Desktop rebrand: this page's copy and the creator guides name COWIN Harness. */
++		for (const dictionary of [en, zh, ja, es, fr, de, ru, pt]) {
++			for (const key of ["sectionIntro", "presetCordisDescription", "createPluginDescription", "guideCordisExplanation", "guideCordisUsage"]) {
++				const text = dictionary[key];
++				if (typeof text === "string") dictionary[key] = text.replaceAll("DSH", "COWIN Harness");
++			}
++		}
+ 		//#endregion
+ 		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-agent-preset/src/client/AgentPresetLabel.module.css.mjs
+ 		const css$4 = ".SVAs4q_label{border-radius:var(--dsw-radius-xs);background:var(--dsw-alias-fill-tsp-secondary);max-width:180px;height:22px;color:var(--dsw-alias-label-tertiary);white-space:nowrap;text-overflow:ellipsis;align-items:center;gap:4px;padding:0 2px 0 0;font-size:12px;line-height:22px;display:inline-flex;overflow:hidden}.SVAs4q_icon{opacity:.7;flex:none}@container (width<=540px){.SVAs4q_label{display:none}}";
+@@ -2273,6 +2282,85 @@ window.__ModuleLoader__.load({
  		function AgentPresetSection({ useAgentPresetSection, load, view, closeView, makeDefault, startCreatorDraft, close: closeSettings, useDeveloperTools, t }) {
  			const state = useAgentPresetSection((value) => value);
  			const developerTools = useDeveloperTools((enabled) => enabled);
@@ -27,12 +41,12 @@ index 96cd2e839f..9a77b48ce9 100644
 +				import: "导入", export: "导出预设", search: "搜索预设", awesome: "Awesome preset",
 +				trust: "自定义预设可以使用与 Agent 相同权限的工具和命令。请只导入可信来源。",
 +				rename: "预设 ID", conflict: "该 ID 已存在，请换一个名称。", install: "安装并在重启后启用",
-+				restart: "预设已导入。重启 DSH Desktop 后生效。", cancel: "取消"
++				restart: "预设已导入。重启 COWIN Harness Desktop 后生效。", cancel: "取消"
 +			} : {
 +				import: "Import", export: "Export preset", search: "Search presets", awesome: "Awesome preset",
 +				trust: "Custom presets can run tools and commands with the same permissions as the Agent. Import only from trusted sources.",
 +				rename: "Preset ID", conflict: "This ID already exists. Choose another name.", install: "Install and enable after restart",
-+				restart: "Preset imported. Restart DSH Desktop to use it.", cancel: "Cancel"
++				restart: "Preset imported. Restart COWIN Harness Desktop to use it.", cancel: "Cancel"
 +			};
 +			const [search, setSearch] = (0, react.useState)("");
 +			const [importFile, setImportFile] = (0, react.useState)(null);
@@ -104,7 +118,7 @@ index 96cd2e839f..9a77b48ce9 100644
  			const [guide, setGuide] = (0, react.useState)(null);
  			const viewTrigger = (0, react.useRef)(null);
  			const closeViewOnUnmount = (0, react.useRef)(closeView);
-@@ -2306,21 +2387,53 @@ window.__ModuleLoader__.load({
+@@ -2306,21 +2394,53 @@ window.__ModuleLoader__.load({
  			return (0, react_jsx_runtime.jsxs)("section", {
  				className: AgentPresetSection_module_css_default.section,
  				children: [
@@ -163,7 +177,7 @@ index 96cd2e839f..9a77b48ce9 100644
  						const entry = builtIn ? null : creatorButton;
  						if (rows.length === 0 && entry === null) return null;
  						return (0, react_jsx_runtime.jsxs)("section", {
-@@ -2428,7 +2541,13 @@ window.__ModuleLoader__.load({
+@@ -2428,7 +2548,13 @@ window.__ModuleLoader__.load({
  														view(row.id);
  													},
  													children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconBrowseOutlineRegular, {})
@@ -178,7 +192,7 @@ index 96cd2e839f..9a77b48ce9 100644
  											})]
  										}, row.id);
  									})
-@@ -2445,6 +2564,34 @@ window.__ModuleLoader__.load({
+@@ -2445,6 +2571,34 @@ window.__ModuleLoader__.load({
  							setGuide(null);
  						}
  					}),

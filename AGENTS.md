@@ -1,10 +1,10 @@
-# DSH Desktop 开发约束
+# COWIN Harness Desktop 开发约束
 
 本文件适用于整个仓库；目录级 `AGENTS.md` 只补充该目录的规则。规则放在能覆盖其作用域的最深层，不重复维护。新增约束与现状、工具覆盖的区别见 [规范设计说明](docs/code-standards.md)。
 
 ## 1. 项目边界
 
-DSH Desktop 是 Electron 宿主，复用 Harness runtime 和 Web UI。保持这一定位，不另建 Agent runtime 或独立业务前端。
+COWIN Harness Desktop 是 Electron 宿主，复用 Harness runtime 和 Web UI。保持这一定位，不另建 Agent runtime 或独立业务前端。
 
 设计与评审优先回答四个问题：能力属于哪个进程；失败后用户数据能否恢复；上游升级后能否继续加载；目标平台的安装包是否包含并能运行这项能力。代码风格服务于这些边界。
 

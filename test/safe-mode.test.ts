@@ -20,8 +20,8 @@ import {
 
 describe('Safe Mode', () => {
   it('is opt-in through an exact command-line switch', () => {
-    expect(shouldStartInSafeMode(['DSH Desktop', '--safe-mode'])).toBe(true)
-    expect(shouldStartInSafeMode(['DSH Desktop', '--safe-mode=false'])).toBe(false)
+    expect(shouldStartInSafeMode(['COWIN Harness Desktop', '--safe-mode'])).toBe(true)
+    expect(shouldStartInSafeMode(['COWIN Harness Desktop', '--safe-mode=false'])).toBe(false)
     expect(relaunchArguments(['/Electron', '/app', '--user-data-dir=/tmp/dsh', '--safe-mode'])).toEqual([
       '/app',
       '--user-data-dir=/tmp/dsh',
@@ -108,7 +108,7 @@ describe('Safe Mode', () => {
       applyLabel: 'Disable selected plugins',
       agentLabel: 'Close',
       restartLabel: 'Restart and verify',
-      quitLabel: 'Quit DSH Desktop'
+      quitLabel: 'Quit COWIN Harness Desktop'
     })
   })
 

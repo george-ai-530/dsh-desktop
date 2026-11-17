@@ -66,7 +66,7 @@ it('honors builder naming precedence and the package-name fallback, not the disp
   }
 })
 
-it.each(['DSH Desktop', 'DSH Desktop Dev'])('preserves macOS Helper and Windows exe naming for %s', product => {
+it.each(['COWIN Harness Desktop', 'COWIN Harness Desktop Dev'])('preserves macOS Helper and Windows exe naming for %s', product => {
   const packager = { appInfo: { productFilename: product }, executableName: 'ignored-linux-name' }
   expect(packagedLayout({ appOutDir: root, electronPlatformName: 'darwin', packager })).toEqual({
     resources: join(root, `${product}.app`, 'Contents', 'Resources'),
@@ -100,7 +100,7 @@ describe.each(['linux', 'darwin', 'win32'])('%s verifier dispatch', platform => 
   it.each(['verify-packaged-harness.cjs', 'verify-packaged-ppt-runtime.cjs', 'verify-office-runtime.cjs'])(
     'runs the packaged executable and propagates failed gate in %s', async file => {
       const context = { appOutDir: root, electronPlatformName: platform,
-        packager: { appInfo: { productFilename: 'DSH Desktop Dev' }, executableName: 'dsh-desktop' } }
+        packager: { appInfo: { productFilename: 'COWIN Harness Desktop Dev' }, executableName: 'dsh-desktop' } }
       const { resources, executable } = packagedLayout(context)
       await mkdir(resources, { recursive: true })
       const source = join(root, 'asar-source')

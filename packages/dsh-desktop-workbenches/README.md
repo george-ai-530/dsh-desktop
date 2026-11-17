@@ -1,6 +1,6 @@
 # dsh-desktop-workbenches
 
-Desktop host plugin for the Awesome DSH Workbench market, local workbench state, navigation and the native conversation frame.
+Desktop host plugin for the Awesome COWIN Harness Desktop Workbench market, local workbench state, navigation and the native conversation frame.
 
 Market metadata comes exclusively from the published Awesome protocol v2 index. Runtime providers register their component without a caller-supplied ID. Local packages may omit `repository`: the host derives `local:<npm package name>` from the actual client package, including `local:@scope/name`. Local development, installation, and use require no GitHub account, URL, or repository creation. Version or directory changes preserve identity; package renames create a new identity. Existing valid repository attribution keeps `owner/repo`. Later market publication does not automatically migrate local sessions or overwrite local identity; migration must be explicit. Registration failures appear in Workbench management with package, stage, and reason and emit console warnings; successful reload clears the matching diagnostic. A provider that wants to be recognized as the installed form of an Awesome entry must include the canonical GitHub URL in its registration descriptor's `repository` field.
 

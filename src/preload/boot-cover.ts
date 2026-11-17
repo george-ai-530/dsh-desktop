@@ -6,13 +6,15 @@ export const BOOT_COVER_ID = 'dsh-desktop-boot-cover'
 export const BOOT_COVER_STYLE_ID = 'dsh-desktop-boot-cover-style'
 export const BOOT_COVER_STALL_MS = 20_000
 /** Same files splash.html loads, served by the desktop protocol so the Harness origin can paint them. */
-export const BOOT_COVER_MARK_URL = 'dsh-desktop://desktop/startup-whale.gif'
+export const BOOT_COVER_MARK_URL = 'dsh-desktop://desktop/startup-brand.svg'
 
-// The supplied GIF has an opaque background and an embedded caption. Match
-// splash.html in both themes rather than recoloring or duplicating that caption.
+// The startup artwork is transparent; paint the same #fbfbfb canvas
+// splash.html uses so the mark renders identically in both themes instead of
+// being recolored or duplicated.
 const BACKGROUND = '#fbfbfb'
 const MARK_WIDTH_PX = 280
-const MARK_ASPECT_RATIO = '480 / 276'
+/** Matches the intrinsic size of build/startup-brand.svg (official bitmap). */
+const MARK_ASPECT_RATIO = '742 / 378'
 
 export interface BootCoverOptions {
   document: Document
@@ -148,8 +150,8 @@ export function mountBootCover(href: string, options: BootCoverOptions): BootCov
   mark.className = 'mark'
   mark.alt = ''
   mark.src = BOOT_COVER_MARK_URL
-  mark.width = 480
-  mark.height = 276
+  mark.width = 742
+  mark.height = 378
   markFrame.append(mark)
   const copy = doc.createElement('div')
   copy.className = 'startupCopy'

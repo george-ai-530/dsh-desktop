@@ -7,9 +7,9 @@ import { describe, expect, it } from 'vitest'
 const projectRoot = path.resolve(import.meta.dirname, '..')
 
 const releaseAssets = [
-  'dsh-desktop-mac-arm64.dmg',
-  'dsh-desktop-mac-x64.dmg',
-  'dsh-desktop-windows-x64-setup.exe'
+  'cowin-harness-desktop-mac-arm64.dmg',
+  'cowin-harness-desktop-mac-x64.dmg',
+  'cowin-harness-desktop-windows-x64-setup.exe'
 ]
 
 /** The exact Harness build every `@deepseek-ai/dsh-*` production dep is pinned to. */
@@ -182,7 +182,7 @@ describe('GitHub release contract', () => {
         portable?: unknown
       }
     }
-    expect(packageJson.build.artifactName).toBe('dsh-desktop-${os}-${arch}.${ext}')
+    expect(packageJson.build.artifactName).toBe('cowin-harness-desktop-${os}-${arch}.${ext}')
     expect(packageJson.build.asar).toBe(true)
     // JavaScript stays in app.asar; only files the OS loads or executes unpack.
     expect(packageJson.build.asarUnpack).not.toContain('node_modules/**/*')
@@ -218,17 +218,13 @@ describe('GitHub release contract', () => {
       to: 'splash.html'
     })
     expect(packageJson.build.extraResources).toContainEqual({
-      from: 'build/startup-whale.gif',
-      to: 'startup-whale.gif'
+      from: 'build/startup-brand.svg',
+      to: 'startup-brand.svg'
     })
-    expect(packageJson.build.extraResources).toContainEqual({
-      from: 'build/dsh-loader.gif',
-      to: 'dsh-loader.gif'
-    })
-    expect(packageJson.build.extraResources).toContainEqual({
-      from: 'build/dsh-loader-dark.gif',
-      to: 'dsh-loader-dark.gif'
-    })
+    // build/startup-whale.gif stays byte-preserved in the repo but no longer ships.
+    expect(packageJson.build.extraResources).not.toContainEqual(
+      expect.objectContaining({ from: 'build/startup-whale.gif' })
+    )
     expect(packageJson.build.extraResources).toContainEqual({
       from: 'build/dsh-desktop.patch.yml',
       to: 'dsh-desktop.patch.yml'
@@ -246,7 +242,7 @@ describe('GitHub release contract', () => {
       to: 'THIRD_PARTY_NOTICES.md'
     })
     expect(packageJson.build.nsis.artifactName).toBe(
-      'dsh-desktop-windows-${arch}-setup.${ext}'
+      'cowin-harness-desktop-windows-${arch}-setup.${ext}'
     )
     expect(packageJson.build.nsis.include).toBe('build/installer.nsh')
     expect(packageJson.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }])
@@ -291,8 +287,8 @@ describe('GitHub release contract', () => {
       'latest-mac-x64.yml',
       'latest-mac.yml',
       'latest.yml',
-      'dsh-desktop-mac-${{ matrix.arch }}.zip.blockmap',
-      'dsh-desktop-windows-x64-setup.exe.blockmap'
+      'cowin-harness-desktop-mac-${{ matrix.arch }}.zip.blockmap',
+      'cowin-harness-desktop-windows-x64-setup.exe.blockmap'
     ]) {
       expect(workflow).toContain(asset)
     }
@@ -354,11 +350,11 @@ describe('GitHub release contract', () => {
     expect(packageJson.scripts['package:dev:win']).toContain('electron-builder.dev.cjs')
     expect(packageJson.scripts['package:dev:win']).toContain('--publish never')
     expect(developmentConfig.appId).toBe('io.dsh.desktop.dev')
-    expect(developmentConfig.productName).toBe('DSH Desktop Dev')
+    expect(developmentConfig.productName).toBe('COWIN Harness Desktop Dev')
     expect(developmentConfig.directories.output).toBe('dist-dev')
     expect(developmentConfig.extraMetadata.dshDesktopChannel).toBe('development')
-    expect(developmentConfig.artifactName).toBe('dsh-desktop-dev-${os}-${arch}.${ext}')
-    expect(developmentConfig.nsis.artifactName).toBe('dsh-desktop-dev-windows-${arch}-setup.${ext}')
+    expect(developmentConfig.artifactName).toBe('cowin-harness-desktop-dev-${os}-${arch}.${ext}')
+    expect(developmentConfig.nsis.artifactName).toBe('cowin-harness-desktop-dev-windows-${arch}-setup.${ext}')
   })
 
   it('builds the official package from the transplanted shell', async () => {
@@ -393,7 +389,7 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain("$isolatedApp = Join-Path $env:RUNNER_TEMP")
     expect(workflow).toContain('$executable = Join-Path $isolatedApp $sourceExecutable.Name')
     expect(workflow).toContain('Packaged koffi native binding failed (exit code $koffiExitCode).')
-    expect(workflow).toContain("'dist-dev\\win-unpacked\\DSH Desktop Dev.exe'")
+    expect(workflow).toContain("'dist-dev\\win-unpacked\\COWIN Harness Desktop Dev.exe'")
     expect(workflow).toContain('check-workbench-install.mjs "$executable"')
     expect(workflow).toContain('$process.Kill($true)')
     const acceptance = await readFile(path.join(projectRoot, 'scripts/verify/check-workbench-install.mjs'), 'utf8')
@@ -410,9 +406,9 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('mode:')
     expect(workflow).toContain('--prerelease')
     expect(workflow).toContain('name: windows-x64-dev')
-    expect(workflow).toContain('dist-dev/dsh-desktop-dev-windows-x64-setup.exe')
-    expect(workflow).toContain('dsh-desktop-mac-${{ matrix.arch }}.dmg')
-    expect(workflow).toContain('dsh-desktop-windows-x64-setup.exe')
+    expect(workflow).toContain('dist-dev/cowin-harness-desktop-dev-windows-x64-setup.exe')
+    expect(workflow).toContain('cowin-harness-desktop-mac-${{ matrix.arch }}.dmg')
+    expect(workflow).toContain('cowin-harness-desktop-windows-x64-setup.exe')
     expect(
       workflow.match(
         /npm version --no-git-tag-version --allow-same-version "\$\{\{ github\.ref_name \}\}"/g

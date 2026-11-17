@@ -147,7 +147,7 @@ describe('desktop plugin market installer', () => {
 
   it('restores the console-hide bootstrap from the Windows pnpm shim', async () => {
     const home = await mkdtemp(join(tmpdir(), 'dsh-console-hide-shim-'))
-    const bootstrap = 'C:\\Program Files (x86)\\DSH Desktop\\resources\\windows-hide-console-import.mjs'
+    const bootstrap = 'C:\\Program Files (x86)\\COWIN Harness Desktop\\resources\\windows-hide-console-import.mjs'
     await ensurePnpmShim(home, { hideConsoleBootstrapPath: bootstrap })
     if (process.platform !== 'win32') return
     const pnpmCmd = await readFile(join(home, '.desktop-bin', 'pnpm.cmd'), 'utf8')

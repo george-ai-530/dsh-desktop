@@ -302,7 +302,7 @@ describe('migration failure paths (issue #250)', () => {
       kind: 'peer-validation-fail',
       problems: [
         '@deepseek-ai/cordis resolves outside the installation closure: ' +
-          'C:\\Program Files\\DSH Desktop\\resources\\app\\node_modules\\@deepseek-ai\\cordis'
+          'C:\\Program Files\\COWIN Harness Desktop\\resources\\app\\node_modules\\@deepseek-ai\\cordis'
       ]
     }
     const home = await preUpgradeProfile({ 'dsh-agent-teams': '1.0.0' })

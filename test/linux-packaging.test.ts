@@ -29,7 +29,7 @@ describe('Linux native packaging', () => {
       category: 'Utility',
       target: [{ target: 'deb', arch: ['x64'] }]
     })
-    expect(manifest.build.linux.artifactName).toBe('dsh-desktop-linux-${arch}-${version}.${ext}')
+    expect(manifest.build.linux.artifactName).toBe('cowin-harness-desktop-linux-${arch}-${version}.${ext}')
     expect(manifest.build.afterPack).toBe('scripts/release/after-pack.cjs')
     expect(manifest.build.asarUnpack).toContain('node_modules/@deepseek-ai/libreoffice-kit-*/**/*')
   })

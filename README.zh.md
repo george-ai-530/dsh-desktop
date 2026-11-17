@@ -1,10 +1,10 @@
 <h1 align="center">
-  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="DSH Desktop Logo" valign="middle" />
-  DSH Desktop
+  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="COWIN Desktop Logo" valign="middle" />
+  COWIN Desktop
 </h1>
 
 <p align="center">
-  <strong>DSH Desktop by Dataelem</strong>（DSH 客户端）是 Dataelem 团队基于 DeepSeek Harness 框架打造的桌面 Agent 应用，提供开源版与<a href="https://www.dshdesktop.com/zh/enterprise/">企业版</a>。<br />
+  <strong>COWIN Desktop by Dataelem</strong>（COWIN 客户端）是 Dataelem 团队基于 DeepSeek Harness 框架打造的桌面 Agent 应用，提供开源版与<a href="https://www.dshdesktop.com/zh/enterprise/">企业版</a>。<br />
   官方网站：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a>
 </p>
 
@@ -18,27 +18,29 @@
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
 
-![DSH Desktop 的 Preset、模型提供方、手机控制与可编辑 PPT 生成功能](docs/images/dsh-desktop-hero-v021.png)
+![COWIN Desktop 的 Preset、模型提供方、手机控制与可编辑 PPT 生成功能](docs/images/dsh-desktop-hero-v021.png)
+
+> 注：下方截图来自旧品牌（DSH Desktop）版本，界面品牌元素已更换为 COWIN，截图待后续更新。
 
 基于 DeepSeek Harness，增强主流模型适配、Word / Excel / PPT 模板、启动异常恢复与工作台，提供开箱即用的桌面体验。
 
 ## 下载安装
 
-请前往[官方网站](https://www.dshdesktop.com/zh/)下载 DSH Desktop。
+请前往[官方网站](https://www.dshdesktop.com/zh/)下载 COWIN Desktop。
 
-DSH Desktop 会自动检查更新。新版本会先进行灰度测试，确认稳定后再向所有用户全量推送。
+COWIN Desktop 会自动检查更新。新版本会先进行灰度测试，确认稳定后再向所有用户全量推送。
 
 ## 加入社区
 
 <p align="center">
-  使用微信扫描下方二维码，加入 DSH Desktop 微信交流群。<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop 微信群二维码" /><br />
-  也可以加入 <a href="https://discord.gg/7Xgf3qe3Qp">DSH Desktop Discord 社区</a>。
+  使用微信扫描下方二维码，加入 COWIN Desktop 微信交流群。<br />
+  <img src="docs/images/wechat-group-20260815.png" width="220" alt="COWIN Desktop 微信群二维码" /><br />
+  也可以加入 <a href="https://discord.gg/7Xgf3qe3Qp">COWIN Desktop Discord 社区</a>。
 </p>
 
-## DSH Desktop 带来了什么
+## COWIN Desktop 带来了什么
 
-DeepSeek Harness 提供 Agent Runtime、Web UI 和基础模型接入能力。DSH Desktop 复用这些基础，重点增强以下体验：
+DeepSeek Harness 提供 Agent Runtime、Web UI 和基础模型接入能力。COWIN Desktop 复用这些基础，重点增强以下体验：
 
 - **主流模型适配**：优化模型提供方配置与首次接入，补充模型搜索、图片输入及推理能力配置，并改善第三方模型兼容性。
 - **Office 三件套模板**：提供 Word 原生套版、Excel 案例工作簿及 PPT 可编辑模板，结合业务技能生成 DOCX、XLSX、PPTX；桌面端随附 Python 和 Office 处理依赖。
@@ -77,7 +79,7 @@ Cloudflare 启动失败时会尝试 Pinggy。若已显示 Cloudflare 配对链�
 
 ## 安全模式与故障恢复
 
-如果第三方插件导致启动或页面渲染异常，DSH Desktop 会结合 Runtime 与前端证据定位相关插件，并打开引导式恢复界面。
+如果第三方插件导致启动或页面渲染异常，COWIN Desktop 会结合 Runtime 与前端证据定位相关插件，并打开引导式恢复界面。
 
 从 `Harness` 菜单选择“以安全模式重启…”，可暂时屏蔽第三方插件，同时保留 Agent、会话、模型配置和工作区。你可以在管理界面停用问题插件，再重启正常模式验证；停用不会删除插件和用户数据，之后可以重新启用。
 
@@ -86,7 +88,7 @@ Cloudflare 启动失败时会尝试 Pinggy。若已显示 Cloudflare 配对链�
 当正常界面无法进入时，也可以通过 `--safe-mode` 启动。例如 macOS：
 
 ```sh
-open -a "DSH Desktop" --args --safe-mode
+open -a "COWIN Desktop" --args --safe-mode
 ```
 
 ## 本地数据与安全边界
@@ -125,12 +127,12 @@ Harness 包含目标平台原生依赖，因此每一种正式安装包都在对
 
 ## 许可证
 
-DSH Desktop 采用 [MIT License](LICENSE) 开源。
+COWIN Desktop 采用 [MIT License](LICENSE) 开源。
 
-DeepSeek Harness 及其依赖仍遵循各自的上游许可证与商标规则。DSH Desktop 是独立的社区桌面应用。
+DeepSeek Harness 及其依赖仍遵循各自的上游许可证与商标规则。COWIN Desktop 是独立的社区桌面应用。
 
 ## 了解企业版
 
-企业版由 BISHENG 桌面客户端与 BISHENG 企业平台服务端组成。客户端基于 DSH Desktop，员工通过企业账号结合本地文件使用获准的模型、知识、工具和技能；服务端集中配置资源与权限，管理积分和用量。企业版的 BISHENG 客户端与服务端均已开源，可通过下方仓库获取源码。
+企业版由 BISHENG 桌面客户端与 BISHENG 企业平台服务端组成。客户端基于 COWIN Desktop，员工通过企业账号结合本地文件使用获准的模型、知识、工具和技能；服务端集中配置资源与权限，管理积分和用量。企业版的 BISHENG 客户端与服务端均已开源，可通过下方仓库获取源码。
 
 [企业管理平台开源仓库](https://github.com/dataelement/bisheng) · [企业版客户端仓库](https://github.com/dataelement/bisheng-desktop) · [企业版介绍](https://www.dshdesktop.com/zh/enterprise/)

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 
-describe('DSH Desktop sidebar branding', () => {
+describe('COWIN Harness Desktop sidebar branding', () => {
 
   it('uses upstream platform-aware collapsed titlebar spacing', async () => {
     const client = await readFile(

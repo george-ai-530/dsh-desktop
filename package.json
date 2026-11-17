@@ -26,8 +26,9 @@
     "postinstall": "patch-package && node scripts/release/install-brand-assets.mjs && install-electron --no",
     "dev": "npm run office:prepare && npm run ppt:build && electron-vite dev",
     "build": "npm run office:prepare && npm run ppt:build && electron-vite build",
+    "brand:render": "node scripts/release/render-brand-assets.mjs",
+    "brand:sync": "node scripts/release/sync-brand-mark.mjs",
     "icons:generate": "node scripts/release/generate-app-icons.mjs",
-    "loader:generate": "node scripts/release/generate-loader-gifs.mjs",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
@@ -324,7 +325,7 @@
   },
   "build": {
     "appId": "io.dsh.desktop",
-    "productName": "DSH Desktop",
+    "productName": "COWIN Harness Desktop",
     "asar": true,
     "asarUnpack": [
       "**/*.{node,dylib,dll,so,exe}",
@@ -436,16 +437,8 @@
         "to": "splash.html"
       },
       {
-        "from": "build/startup-whale.gif",
-        "to": "startup-whale.gif"
-      },
-      {
-        "from": "build/dsh-loader.gif",
-        "to": "dsh-loader.gif"
-      },
-      {
-        "from": "build/dsh-loader-dark.gif",
-        "to": "dsh-loader-dark.gif"
+        "from": "build/startup-brand.svg",
+        "to": "startup-brand.svg"
       },
       {
         "from": "build/plugin-recovery.html",
@@ -487,7 +480,7 @@
       }
     ],
     "detectUpdateChannel": false,
-    "artifactName": "dsh-desktop-${os}-${arch}.${ext}",
+    "artifactName": "cowin-harness-desktop-${os}-${arch}.${ext}",
     "mac": {
       "notarize": false,
       "category": "public.app-category.developer-tools",
@@ -496,7 +489,7 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "extendInfo": {
-        "NSMicrophoneUsageDescription": "DSH Desktop uses your microphone to transcribe speech into message drafts."
+        "NSMicrophoneUsageDescription": "COWIN Harness Desktop uses your microphone to transcribe speech into message drafts."
       },
       "gatekeeperAssess": false,
       "signIgnore": [
@@ -534,7 +527,7 @@
       "maintainer": "DataElement",
       "icon": "build/app-icon.png",
       "category": "Utility",
-      "artifactName": "dsh-desktop-linux-${arch}-${version}.${ext}"
+      "artifactName": "cowin-harness-desktop-linux-${arch}-${version}.${ext}"
     },
     "win": {
       "icon": "build/icon.ico",
@@ -556,7 +549,7 @@
       ]
     },
     "nsis": {
-      "artifactName": "dsh-desktop-windows-${arch}-setup.${ext}",
+      "artifactName": "cowin-harness-desktop-windows-${arch}-setup.${ext}",
       "include": "build/installer.nsh",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,

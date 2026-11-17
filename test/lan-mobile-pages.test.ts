@@ -18,7 +18,7 @@ describe('LAN mobile page', () => {
 
   it('uses the DSH brand color and follows system dark mode', () => {
     const html = renderMobilePage({ locale: 'en' })
-    expect(html).toContain('--brand:#4d6bfe')
+    expect(html).toContain('--brand:#0052d9')
     expect(html).toContain('prefers-color-scheme:dark')
     expect(html).toContain('content="#ffffff" media="(prefers-color-scheme:light)"')
     expect(html).toContain('content="#141416" media="(prefers-color-scheme:dark)"')
@@ -298,7 +298,7 @@ describe('LAN mobile page', () => {
       modePanel.indexOf('class="hint" id="modeHint"')
     )
     expect(phone).toContain('prefers-color-scheme:dark')
-    expect(phone).toContain('--brand:#4d6bfe')
+    expect(phone).toContain('--brand:#0052d9')
     expect(phone).toContain('--bg:#141416')
     expect(phone).toContain('/brand-logo/dark')
     expect(phone).toContain('background:var(--panel)')
@@ -306,7 +306,7 @@ describe('LAN mobile page', () => {
     expect(phone).toContain("fetch('/pair/verify'")
     expect(phone).toContain('Enter pairing password')
     expect(phone).toContain('Show password on the computer')
-    expect(phone).toContain('Cannot reach the desktop. Start DSH Desktop and try again.')
+    expect(phone).toContain('Cannot reach the desktop. Start COWIN Harness Desktop and try again.')
     expect(phone).toContain("location.replace('/')")
     expect(phone).not.toContain("location.href='/'")
   })
@@ -539,7 +539,7 @@ describe('LAN mobile page', () => {
     expect(desktop).not.toContain('id="copyToast"')
     expect(phone).toContain('输入连接密码')
     expect(phone).toContain('在电脑上查看密码')
-    expect(phone).toContain('暂时无法连接桌面端，请先启动 DSH Desktop。')
+    expect(phone).toContain('暂时无法连接桌面端，请先启动 COWIN Harness Desktop。')
   })
 
   it('renders the temporary pin hint with remaining seconds from one helper', () => {

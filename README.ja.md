@@ -1,10 +1,10 @@
 <h1 align="center">
-  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="DSH Desktop ロゴ" valign="middle" />
-  DSH Desktop
+  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="COWIN Desktop ロゴ" valign="middle" />
+  COWIN Desktop
 </h1>
 
 <p align="center">
-  <strong>DSH Desktop by Dataelem</strong> は、Dataelem チームが DeepSeek Harness フレームワークを基盤に開発したデスクトップ Agent アプリケーションです。オープンソース版と<a href="https://www.dshdesktop.com/ja/enterprise/">エンタープライズ版</a>を提供しています。<br />
+  <strong>COWIN Desktop by Dataelem</strong> は、Dataelem チームが DeepSeek Harness フレームワークを基盤に開発したデスクトップ Agent アプリケーションです。オープンソース版と<a href="https://www.dshdesktop.com/ja/enterprise/">エンタープライズ版</a>を提供しています。<br />
   公式サイト：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a>
 </p>
 
@@ -18,25 +18,27 @@
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
 
-![ポータブル Preset、モデルプロバイダー、スマートフォン連携、編集可能な PPTX 生成を備えた DSH Desktop](docs/images/dsh-desktop-hero-v021.png)
+![ポータブル Preset、モデルプロバイダー、スマートフォン連携、編集可能な PPTX 生成を備えた COWIN Desktop](docs/images/dsh-desktop-hero-v021.png)
+
+> 注：以下のスクリーンショットは旧ブランド（DSH Desktop）時代のもので、ブランド要素は COWIN に変更済みです。スクリーンショットは後日更新予定です。
 
 DeepSeek Harness を基盤に、主要モデル連携、Word / Excel / PPT テンプレート、起動障害の復旧、ワークベンチを強化したデスクトップアプリです。
 
 ## ダウンロード
 
-DSH Desktop は[公式サイト](https://www.dshdesktop.com/ja/)からダウンロードできます。
+COWIN Desktop は[公式サイト](https://www.dshdesktop.com/ja/)からダウンロードできます。
 
-DSH Desktop は自動的に更新を確認します。新しいバージョンは、まず一部のユーザーを対象に段階的に配信してテストし、安定性を確認してからすべてのユーザーに配信します。
+COWIN Desktop は自動的に更新を確認します。新しいバージョンは、まず一部のユーザーを対象に段階的に配信してテストし、安定性を確認してからすべてのユーザーに配信します。
 
 ## コミュニティ
 
 <p align="center">
-  下の QR コードを WeChat で読み取り、DSH Desktop コミュニティグループに参加してください。<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop WeChat グループの QR コード" /><br />
-  Discord を利用する場合は、<a href="https://discord.gg/7Xgf3qe3Qp">DSH Desktop Discord コミュニティ</a>にも参加できます。
+  下の QR コードを WeChat で読み取り、COWIN Desktop コミュニティグループに参加してください。<br />
+  <img src="docs/images/wechat-group-20260815.png" width="220" alt="COWIN Desktop WeChat グループの QR コード" /><br />
+  Discord を利用する場合は、<a href="https://discord.gg/7Xgf3qe3Qp">COWIN Desktop Discord コミュニティ</a>にも参加できます。
 </p>
 
-## DSH Desktop が追加する機能
+## COWIN Desktop が追加する機能
 
 DeepSeek Harness が提供する Agent Runtime、Web UI、基本的なモデル接続を活用し、次の体験を強化します。
 
@@ -74,7 +76,7 @@ Cloudflare の起動に失敗すると Pinggy を試します。Cloudflare の�
 
 ## セーフモードと復旧
 
-サードパーティープラグインが起動や画面表示を妨げた場合、DSH Desktop は Runtime とフロントエンドの証拠から関連プラグインを特定し、ガイド付き復旧画面を開きます。
+サードパーティープラグインが起動や画面表示を妨げた場合、COWIN Desktop は Runtime とフロントエンドの証拠から関連プラグインを特定し、ガイド付き復旧画面を開きます。
 
 `Harness` メニューの **Restart as Safe Mode…** でサードパーティープラグインを一時停止し、Agent、セッション、モデル設定、ワークスペースは引き続き利用できます。管理画面で問題のプラグインを無効にし、通常モードで再起動して確認できます。無効化してもプラグインやユーザーデータは削除されず、後から再度有効にできます。
 
@@ -83,7 +85,7 @@ Cloudflare の起動に失敗すると Pinggy を試します。Cloudflare の�
 通常画面を開けない場合は `--safe-mode` を指定できます。macOS の例：
 
 ```sh
-open -a "DSH Desktop" --args --safe-mode
+open -a "COWIN Desktop" --args --safe-mode
 ```
 
 ## ローカルデータとセキュリティ
@@ -120,12 +122,12 @@ Harness にはターゲット固有のネイティブ依存関係が含まれる
 
 ## ライセンス
 
-DSH Desktop は [MIT License](LICENSE) のもとで公開されています。
+COWIN Desktop は [MIT License](LICENSE) のもとで公開されています。
 
-DeepSeek Harness とその依存関係には、それぞれの上流ライセンスと商標ポリシーが適用されます。DSH Desktop は独立したコミュニティデスクトップアプリです。
+DeepSeek Harness とその依存関係には、それぞれの上流ライセンスと商標ポリシーが適用されます。COWIN Desktop は独立したコミュニティデスクトップアプリです。
 
 ## エンタープライズ版について
 
-エンタープライズ版は、BISHENG デスクトップクライアントと BISHENG 企業プラットフォームのサーバーで構成されます。DSH Desktop を基盤とするクライアントでは、企業アカウントでローカルファイルと利用を許可されたモデル、ナレッジ、ツール、スキルを組み合わせて作業できます。サーバーはリソースと権限を一元設定し、クレジットと利用量を管理します。 エンタープライズ版の BISHENG クライアントとサーバーはいずれもオープンソースで、以下のリポジトリからソースコードを取得できます。
+エンタープライズ版は、BISHENG デスクトップクライアントと BISHENG 企業プラットフォームのサーバーで構成されます。COWIN Desktop を基盤とするクライアントでは、企業アカウントでローカルファイルと利用を許可されたモデル、ナレッジ、ツール、スキルを組み合わせて作業できます。サーバーはリソースと権限を一元設定し、クレジットと利用量を管理します。 エンタープライズ版の BISHENG クライアントとサーバーはいずれもオープンソースで、以下のリポジトリからソースコードを取得できます。
 
 [企業管理プラットフォームのソース](https://github.com/dataelement/bisheng) · [エンタープライズ版クライアントのリポジトリ](https://github.com/dataelement/bisheng-desktop) · [エンタープライズ版の紹介](https://www.dshdesktop.com/ja/enterprise/)

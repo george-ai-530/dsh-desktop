@@ -16,7 +16,7 @@ import {
   UPDATE_ACTION_FAILED,
   type UpdateLocale
 } from './update-view'
-import brandMark from '../../build/brand-mark.svg?raw'
+import brandMark from '../../build/brand/brand-mark.svg?raw'
 const t = (key: Parameters<typeof updateText>[1], values: Readonly<Record<string, string | number>> = {}) => updateText(locale, key, values)
 const ROOT_ID = 'dsh-desktop-update-root'
 let locale: UpdateLocale = 'en'
@@ -166,7 +166,7 @@ function render(): void {
   const headline = updateHeadline(status, locale)
   const body = element('div', 'body')
   const title = element('p', 'title')
-  title.textContent = status.phase === 'up-to-date' ? `DSH Desktop v${status.currentVersion}` : headline.title
+  title.textContent = status.phase === 'up-to-date' ? `COWIN Harness Desktop v${status.currentVersion}` : headline.title
   body.appendChild(title)
   row.appendChild(body)
 
@@ -406,7 +406,7 @@ function renderAbout(): void {
   header.appendChild(switcher)
   card.appendChild(header)
   const title = element('h2', 'about-title')
-  title.textContent = 'DSH Desktop'
+  title.textContent = 'COWIN Harness Desktop'
   card.appendChild(title)
   const version = element('p', 'about-line')
   version.textContent = `v${info.desktopVersion} (${a('bundled')} Harness ${info.harnessVersion ?? a('unknown')}`
@@ -557,7 +557,7 @@ const styles = `
   .row { display:flex; gap:12px; align-items:center; }
   .body { min-width:0; flex:1; }
   .centered .row { display:block; }
-  .app-icon { display:inline-flex; width:56px; height:56px; padding:6px; background:#0d1716; color:#fff; border-radius:12px; flex:none; position:relative; }
+  .app-icon { display:inline-flex; width:56px; height:56px; padding:6px; background:#0052D9; color:#fff; border-radius:12px; flex:none; position:relative; }
   .app-icon svg { width:100%; height:100%; }
   .app-icon svg path { fill:currentColor; }
   .notification { padding:16px; }

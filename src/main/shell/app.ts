@@ -45,7 +45,7 @@ import { DesktopHostFatalError, DesktopHostProcess } from './backend/host-proces
 import { continueAfterHostStartup, createHostFailureIntake } from './host-failure-intake'
 import { readDesktopLoginShellEnvironment, resolveDesktopLoginShellConfig } from './backend/login-shell-environment'
 import { attachDesktopStorage } from './desktop-storage-bridge'
-import { ENTERPRISE_URL, aboutUsesPage, buildDarwinDesktopMenu, buildWindowsApplicationMenu, externalUrlToOpen, insertFileMenu, shortcutFileMenuLabels } from './enterprise-menu'
+import { aboutUsesPage, buildDarwinDesktopMenu, buildWindowsApplicationMenu, externalUrlToOpen, insertFileMenu, shortcutFileMenuLabels } from './enterprise-menu'
 import { installDesktopShortcuts, type DesktopShortcutController } from './keyboard'
 import { installDesktopFileDrag } from './file-drag'
 import { runQuitSteps } from './quit-steps'
@@ -163,7 +163,7 @@ function configureDesktopIdentity(): void {
     process.execPath.toLowerCase().includes('bisheng') ||
     hasEnterprisePlugin()
   )
-  const defaultProdName = isBisheng ? 'BISHENG' : 'DSH Desktop'
+  const defaultProdName = isBisheng ? 'BISHENG' : 'COWIN Harness Desktop'
 
   const development = desktopDevelopmentBuild(metadata)
   const environment = developmentEnvironment(development, 43129)
@@ -176,7 +176,7 @@ function configureDesktopIdentity(): void {
     return
   }
   if (!isBisheng) {
-    app.setName('DSH Desktop')
+    app.setName('COWIN Harness Desktop')
     // Keep the historical lowercase directory. Deriving it from the product name
     // would hide the existing sessions on an ordinary upgrade.
     app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))
@@ -405,7 +405,7 @@ async function presentAbout(window: BrowserWindow, locale: HarnessLocale): Promi
   const result = await dialog.showMessageBox(window, {
     type: 'info',
     title: app.name,
-    message: updateText(locale, 'about').replace('DSH Desktop', app.name),
+    message: updateText(locale, 'about').replace('COWIN Harness Desktop', app.name),
     detail: aboutDetail(desktopVersion, harnessVersion, locale),
     buttons: [updateText(locale, 'checkForUpdates'), updateText(locale, 'close')],
     defaultId: 1,
@@ -569,9 +569,6 @@ async function main(): Promise<void> {
     const template = insertFileMenu(buildDarwinDesktopMenu({
       locale: menuLocale,
       appName: app.name,
-      openEnterprise: () => {
-        void shell.openExternal(ENTERPRISE_URL).catch((error: unknown) => { console.error(error) })
-      },
       showAbout: () => {
         const target = desktopWindow
         if (target === undefined || target.isDestroyed()) return
@@ -646,7 +643,7 @@ async function main(): Promise<void> {
     }
     windowsTray.setToolTip(app.name)
     windowsTray.setContextMenu(Menu.buildFromTemplate([
-      { label: desktopDailyText(menuLocale, 'trayShow').replace('DSH Desktop', app.name), click: showMainWindow },
+      { label: desktopDailyText(menuLocale, 'trayShow').replace('COWIN Harness Desktop', app.name), click: showMainWindow },
       { type: 'separator' },
       { label: desktopMenuMessages(menuLocale).exit, click: () => { app.quit() } }
     ]))
@@ -1249,7 +1246,7 @@ async function main(): Promise<void> {
   ipcMain.removeHandler('desktop-titlebar:set-theme')
   ipcMain.handle('desktop-titlebar:set-theme', (event, isDark: unknown) => {
     const owner = assertMain(event)
-    if (typeof isDark !== 'boolean') throw new Error('The DSH Desktop titlebar theme must be a boolean.')
+    if (typeof isDark !== 'boolean') throw new Error('The COWIN Harness Desktop titlebar theme must be a boolean.')
     if (usesDesktopCaption(process.platform)) {
       owner.setTitleBarOverlay(windowsTitleBarOverlay(isDark))
       owner.setBackgroundColor(windowsChromeBackground(isDark))
@@ -1294,9 +1291,6 @@ async function main(): Promise<void> {
         return
       case 'about':
         await presentAbout(owner, menuLocale)
-        return
-      case 'explore-enterprise':
-        await shell.openExternal(ENTERPRISE_URL)
         return
       case 'quit':
         app.quit()
@@ -1373,7 +1367,7 @@ async function main(): Promise<void> {
           log: message => { console.info(message) }
         })
         if (result.failures.length > 0) {
-          throw new Error('Unable to stop background services before replacing DSH Desktop.')
+          throw new Error('Unable to stop background services before replacing COWIN Harness Desktop.')
         }
       },
       installFailed: async () => {

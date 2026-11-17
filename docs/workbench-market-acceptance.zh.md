@@ -1,6 +1,6 @@
 # 工作台市场验收规范
 
-版本：2026-09-29 · 以官网版本为准，DSH Desktop 内附文档副本供离线取用。
+版本：2026-09-29 · 以官网版本为准，COWIN Harness Desktop 内附文档副本供离线取用。
 
 官方地址：https://dshdesktop.com/workbench/docs/market-acceptance/
 
@@ -10,7 +10,7 @@ Markdown 原文（供 Agent 读取）：https://dshdesktop.com/workbench/docs/ma
 
 本文只适用于**想把工作台上架到工作台市场**的情况。只在本地开发、自己使用的工作台，满足《工作台开发规范》（https://dshdesktop.com/workbench/docs/development/ ）并在本机自测通过即可，不需要阅读本文，也不需要公开代码或上传任何资料。
 
-上架流程与 DSH 插件市场相同：作者把代码放到自己的公开 GitHub 仓库，再向 [awesome-dsh-workbench](https://github.com/dataelement/awesome-dsh-workbench) 提交一个收录 PR。简介、截图等资料只在这一步才需要准备。收录 YAML 与客户端索引的字段以该仓库的 `catalog/README.md` 和 `schema/` 为准，本文只说明作者要满足什么、审核看什么，不重新定义字段。
+上架流程与 COWIN Harness Desktop 插件市场相同：作者把代码放到自己的公开 GitHub 仓库，再向 [awesome-dsh-workbench](https://github.com/dataelement/awesome-dsh-workbench) 提交一个收录 PR。简介、截图等资料只在这一步才需要准备。收录 YAML 与客户端索引的字段以该仓库的 `catalog/README.md` 和 `schema/` 为准，本文只说明作者要满足什么、审核看什么，不重新定义字段。
 
 规则分三级：**必须**（不满足就不能收录或安装）、**建议**、**可选**。
 
@@ -18,7 +18,7 @@ Markdown 原文（供 Agent 读取）：https://dshdesktop.com/workbench/docs/ma
 
 - 市场投稿是独立的用户意图。仅收到通用开发指令、发现一个已有工作台，或完成本机开发，都不代表用户要求公开代码或投稿；未明确要求上架时停在本机交付。开发目标未明确时先执行《工作台开发规范》的需求确认闸门。
 - **必须**满足《工作台开发规范》的全部“必须”项，并通过其中的本地自测清单。
-- **必须**在真实的 DSH Desktop 上安装并实际打开验证过；记录验证过的 Desktop 版本、操作系统和架构。未验证的平台不声明兼容。
+- **必须**在真实的 COWIN Harness Desktop 上安装并实际打开验证过；记录验证过的 Desktop 版本、操作系统和架构。未验证的平台不声明兼容。
 - 投稿前核对实际证据：最终安装来源及版本、包校验结果、Desktop 安装与打开记录、自测清单和对应截图。缺少证据的项目标为“未验证”，先完成验证；不能仅凭 Agent 计划、构建成功或“应当可安装”的推断填写“已通过”并提交公开 PR。
 
 ## 2. 上架流程
@@ -46,12 +46,12 @@ Markdown 原文（供 Agent 读取）：https://dshdesktop.com/workbench/docs/ma
 
 ## 3. 仓库与代码要求
 
-与 DSH 插件市场的收录要求一致：
+与 COWIN Harness Desktop 插件市场的收录要求一致：
 
 - **必须**是作者自己的公开 GitHub 仓库，并有许可证。私有仓库不能进入公共市场，但可以继续在本机或团队内部使用。
 - **必须**声明 `dsh.bundle`；只有 `dsh.client` 的包不可安装，不会被收录。
 - **必须**包含真实可用的代码，不收占位、只有 README 或抢注名称的仓库；持续维护，长期失效或归档的条目会被复查处理。
-- 不收只有依赖列表的聚合包；不能是 DSH 本身的副本。
+- 不收只有依赖列表的聚合包；不能是 COWIN Harness Desktop 本身的副本。
 - 依赖**必须**指向原作者的仓库或其发布的 npm 包，不能把别人的插件重新上传到自己名下再依赖。
 - 不得包含混淆代码、窃取凭证或在安装时执行意外行为的代码。
 
@@ -113,9 +113,9 @@ screenshots:
 
 PR 描述写明：工作台用途、本机验收结果、验证过的 Desktop 版本和平台、安装来源，以及需要注意的外部依赖、网络访问和数据位置。
 
-### 与 DSH 插件市场的不同之处
+### 与 COWIN Harness Desktop 插件市场的不同之处
 
-| 项目 | DSH 插件市场 | 工作台市场 |
+| 项目 | COWIN Harness Desktop 插件市场 | 工作台市场 |
 |---|---|---|
 | 收录仓库 | `awesome-dsh-plugin` | `dataelement/awesome-dsh-workbench` |
 | 文件 | `data/plugins/<owner>__<repo>.yml` | `data/workbenches/<owner>__<repo>.yml` |
@@ -157,6 +157,6 @@ PR 描述写明：工作台用途、本机验收结果、验证过的 Desktop �
 
 ## 参考
 
-- DSH 插件市场收录规则：[awesome-dsh-plugin contributing.md](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/blob/main/contributing.md)、[dsh-market](https://github.com/dsh-market/dsh-market)。
+- COWIN Harness Desktop 插件市场收录规则：[awesome-dsh-plugin contributing.md](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/blob/main/contributing.md)、[dsh-market](https://github.com/dsh-market/dsh-market)。
 - 工作台市场收录格式：[awesome-dsh-workbench](https://github.com/dataelement/awesome-dsh-workbench) 的 `catalog/README.md` 与 `schema/`。
 - 开发阶段的规则：《工作台开发规范》：https://dshdesktop.com/workbench/docs/development/ 。

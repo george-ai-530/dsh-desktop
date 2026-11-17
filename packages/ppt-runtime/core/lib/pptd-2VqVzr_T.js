@@ -2084,7 +2084,7 @@ async function renderPptdProject(project) {
 	});
 	pptx.layout = layoutName;
 	pptx.author = "DSH PPTD";
-	pptx.company = "DeepSeek Harness";
+	pptx.company = "COWIN Harness Desktop";
 	pptx.subject = "Local PPTD v2 editable rendering";
 	pptx.title = project.title;
 	const textStyles = themeMap(project, "textStyles");

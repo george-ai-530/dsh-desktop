@@ -149,11 +149,11 @@ export function describePluginFailure(
   if (/declares no dsh\.bundle/i.test(text)) {
     return locale === 'zh'
       ? {
-          title: '安装的包不是兼容的 DSH 插件',
-          detail: '这个包缺少 DSH 插件所需的入口声明，因此 Harness 无法加载。'
+          title: '安装的包不是兼容的 COWIN Harness Desktop 插件',
+          detail: '这个包缺少 COWIN Harness Desktop 插件所需的入口声明，因此 Harness 无法加载。'
         }
       : {
-          title: 'The package is not a compatible DSH plugin',
+          title: 'The package is not a compatible COWIN Harness Desktop plugin',
           detail: 'It does not declare the entry point required by Harness.'
         }
   }
@@ -236,9 +236,9 @@ export function buildPluginRecoveryViewModel(options: {
         : undefined
   return {
     locale,
-    brand: 'DSH Desktop',
+    brand: 'COWIN Harness Desktop',
     badge: zh ? '启动修复' : 'Startup recovery',
-    heading: zh ? '启动遇到问题，DSH 暂时无法正常启动' : 'A startup error is preventing DSH from opening',
+    heading: zh ? '启动遇到问题，COWIN Harness Desktop 暂时无法正常启动' : 'A startup error is preventing COWIN Harness Desktop from opening',
     summary: canRepair ? (zh ? '别着急，我们已找到可尝试的修复方案。展开查看后，同意方案可点击“一键修复”；也可以选择回退应用版本。' : 'We have a repair plan you can try. Review it below, then choose Repair now or roll back the app version.') : (zh ? '暂时无法自动修复。进入维修 Agent 模式后，将在安全模式下继续排查问题。' : 'Automatic repair is unavailable. The repair Agent will continue investigating in Safe Mode.'),
     roundAction,
     repairDetailsLabel: zh ? '查看修复方案' : 'View repair plan',
@@ -272,7 +272,7 @@ export function buildPluginRecoveryViewModel(options: {
     launchDirectoryLabel: zh ? '启动目录' : 'Launch directory',
     launchDirectory: snapshot.launchDirectory,
     rawError: snapshot.message,
-    quitLabel: zh ? '退出 DSH Desktop' : 'Quit DSH Desktop',
+    quitLabel: zh ? '退出 COWIN Harness Desktop' : 'Quit COWIN Harness Desktop',
     safeModeLabel: zh ? '让 Agent 帮我修' : 'Ask Agent to help',
     canUninstall: false,
     canRepair,

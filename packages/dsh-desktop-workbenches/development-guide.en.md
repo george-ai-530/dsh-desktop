@@ -2,7 +2,7 @@
 
 # Workbench Development Standard
 
-Version: 2026-10-27 · The website is authoritative; DSH Desktop bundles a copy for offline use.
+Version: 2026-10-27 · The website is authoritative; COWIN Harness Desktop bundles a copy for offline use.
 
 Official page: https://dshdesktop.com/workbench/docs/development-en/
 
@@ -10,11 +10,11 @@ Markdown source for agents: https://dshdesktop.com/workbench/docs/development-en
 
 Six-step quickstart: https://dshdesktop.com/workbench/docs/quickstart-en/ ([Markdown](https://dshdesktop.com/workbench/docs/quickstart-en.md)). [中文版](https://dshdesktop.com/workbench/docs/development/).
 
-This standard is intended for direct execution by an AI developing a workbench. **For local development and personal use, this document is sufficient**: build the package under Section 3, install it in the local DSH Desktop, and pass the Section 8 self-test. There is no requirement to publish code or upload anything.
+This standard is intended for direct execution by an AI developing a workbench. **For local development and personal use, this document is sufficient**: build the package under Section 3, install it in the local COWIN Harness Desktop, and pass the Section 8 self-test. There is no requirement to publish code or upload anything.
 
 If the author later wants to list the workbench in the Workbench Market, also read the [Workbench Market Acceptance Standard](https://dshdesktop.com/workbench/docs/market-acceptance-en/). Its separate rules cover a public repository, releases, descriptions, screenshots, and listing PRs.
 
-A workbench is a DSH plugin. It must first be a valid DSH plugin package that `dsh plugin add` can install and Harness can load. It then registers a business panel with Desktop and follows the rules for workbenches, sessions, and workspaces.
+A workbench is a COWIN Harness Desktop plugin. It must first be a valid COWIN Harness Desktop plugin package that `dsh plugin add` can install and Harness can load. It then registers a business panel with Desktop and follows the rules for workbenches, sessions, and workspaces.
 
 Rule levels are **required** (failure prevents installation or loading), **recommended** (strongly advised for usability and future listing), and **optional**.
 
@@ -26,7 +26,7 @@ Rule levels are **required** (failure prevents installation or loading), **recom
 
 After every workbench development handoff, the final response must end with a prominent three-point “What to do next” block, after all change descriptions, self-test results, file links, and technical appendices. Do not leave the reminder only at the beginning, and do not append any content after these three points:
 1. Development result: Use the actual workbench name and state the development and installation status. Say “Developed and installed locally” only when both actually succeeded; if development is incomplete or installation failed, explain the blocker honestly. Do not claim it loaded or all acceptance checks passed.
-2. How to restart: When installation succeeded and a restart is needed, ask the user to wait until the current task finishes, then click “Restart now” in the top banner or choose Harness → Restart Harness; normally only Harness needs restarting, without quitting DSH Desktop. Suggest fully quitting and reopening DSH Desktop only if Harness restart does not load the workbench and troubleshooting confirms this is needed. Do not close or restart the app the user is working in yourself. If no restart is needed or installation is incomplete, say so; do not present restarting as a fix for failed installation.
+2. How to restart: When installation succeeded and a restart is needed, ask the user to wait until the current task finishes, then click “Restart now” in the top banner or choose Harness → Restart Harness; normally only Harness needs restarting, without quitting COWIN Harness Desktop. Suggest fully quitting and reopening COWIN Harness Desktop only if Harness restart does not load the workbench and troubleshooting confirms this is needed. Do not close or restart the app the user is working in yourself. If no restart is needed or installation is incomplete, say so; do not present restarting as a fix for failed installation.
 3. Where to open it: After restarting, expand the sidebar and use the current name / switch area beside “Workbenches” at the upper left to select the newly created workbench (give its actual name). If missing, go to Workbench Market → Installed, find the entry marked “Local,” and check its running state; switch after it loads or is enabled. The user can try it directly, or optionally return to the original conversation and say “Restart complete” for continued verification; returning to the conversation is not required to use it. If installation is incomplete, state that this entry remains unconfirmed until installation and loading succeed.
 
 **Requirements conversation (before code)**: Discover the workbench through progressive conversation, asking only one necessary question at a time that affects the next step. Reuse the current request and confirmed context; do not repeat information the user already provided. If the name is unknown, first ask “What would you like to call this workbench?” A provisional name is fine and naming must not block implementation. Then fill gaps about the intended users, main functions, or business scenario as needed, without a fixed questionnaire or several questions bundled together. If the user cannot describe the core workflow, suggest a minimal flow based on their answers and ask them to confirm or adjust it; do not require a complete requirements form. Start once the business goal and smallest implementation scope are sufficiently clear and confirmed, without filling every formal field. Generic development instructions, directory names, existing code, or dependencies do not establish intent by themselves. While business intent or implementation scope remains unclear, wait for the current answer. Read-only checks of directories, versions, scripts, and host capabilities are allowed; creating or editing business code, UI, or package files, building, packing, installing, or submitting are not.
@@ -45,11 +45,11 @@ Before development, check:
 3. **Define the smallest business flow and layout**: Write down entry point, main action, completion state, and failure recovery. Under Section 4, choose a standard split or `customFrame` and define the first-use path without a session before choosing host capabilities.
 4. **Implement**: Create the plugin package and registration under Section 3; follow Sections 4–7 for applicable responsibilities and capabilities.
 5. **Verify package**: Run `pnpm pack`; inspect `package.json`, declared entries, `cordis.patch.yml`, size, and sensitive files inside the tarball.
-6. **Install and test locally**: Check installation capabilities under Section 3.6, install that tarball, complete the required restart, and record real UI and loading evidence under Section 8. If the agent runs inside the target DSH Desktop, ask the user to restart it manually under the boundary below.
+6. **Install and test locally**: Check installation capabilities under Section 3.6, install that tarball, complete the required restart, and record real UI and loading evidence under Section 8. If the agent runs inside the target COWIN Harness Desktop, ask the user to restart it manually under the boundary below.
 
 After building and verifying the archive, the model calls `install_local_workbench({ path: "<absolute local .tgz path>", replace: false })` directly. This uses Plugin Manager `installBundle`; users do not enter paths or operate an installation page. Pass `replace: true` only for an authorized update of the same workbench. Inspect `application`: verify the UI for `applied`; only `restart-required` calls for restarting Harness. Failed, cancelled and overridden do not mean applied.
 
-**Restart boundary inside the target app**: Do not close or restart DSH Desktop or Harness yourself or use process probes such as `ps` or `pgrep` to manage the restart; ask the user to restart manually. After the user restarts Harness, offer two optional paths: (1) Try it directly: expand the sidebar, click the current workbench name / switch area to the right of “Workbenches” at the upper left, and select the new workbench. If it is missing, check its entry and running state in Workbench Market → Installed, then switch after it loads or is enabled. New local workbenches are added to the switch menu automatically when loaded; there is no separate “Add” button. (2) Continue Agent verification: return to the original development conversation and tell the Agent “Restart complete”; the Agent then follows Section 8 to check loading, the installed list, the switch entry, and the real business UI. Users may try it independently without returning to the conversation. Checks the Agent has not actually performed remain pending verification; installation success does not mean all acceptance checks passed. An Agent outside the target app may follow the normal restart process.
+**Restart boundary inside the target app**: Do not close or restart COWIN Harness Desktop or Harness yourself or use process probes such as `ps` or `pgrep` to manage the restart; ask the user to restart manually. After the user restarts Harness, offer two optional paths: (1) Try it directly: expand the sidebar, click the current workbench name / switch area to the right of “Workbenches” at the upper left, and select the new workbench. If it is missing, check its entry and running state in Workbench Market → Installed, then switch after it loads or is enabled. New local workbenches are added to the switch menu automatically when loaded; there is no separate “Add” button. (2) Continue Agent verification: return to the original development conversation and tell the Agent “Restart complete”; the Agent then follows Section 8 to check loading, the installed list, the switch entry, and the real business UI. Users may try it independently without returning to the conversation. Checks the Agent has not actually performed remain pending verification; installation success does not mean all acceptance checks passed. An Agent outside the target app may follow the normal restart process.
 
 **Empty-directory exercise**: If the directory is empty and the user only pasted generic development instructions or said “make a workbench,” reuse any context already provided. If the name is unknown, ask only “What would you like to call this workbench?” and allow a provisional name. On the next turn, ask the one business question that most affects implementation, such as “What should it mainly help you do?” If the purpose is already clear, skip that question and suggest a minimal flow for confirmation. Read-only directory and Desktop capability checks are allowed. Until the business goal and scope are sufficiently clear, do not create package files, business code, or pages, or build, install, or submit. A name alone is not a business brief.
 
@@ -58,7 +58,7 @@ After building and verifying the archive, the model calls `install_local_workben
 A workbench package is simultaneously:
 
 - **An npm package** with `name` and `version`, installable from a local directory or `.tgz`, and after listing potentially from npm or GitHub.
-- **A DSH plugin (bundle)** whose `package.json` declares `dsh.bundle.patch`; `cordis.patch.yml` inserts the server entry into the Harness plugin tree.
+- **A COWIN Harness Desktop plugin (bundle)** whose `package.json` declares `dsh.bundle.patch`; `cordis.patch.yml` inserts the server entry into the Harness plugin tree.
 - **A Desktop workbench** whose client calls `desktopWorkbenches.register()` to register a business panel. When a local package omits `repository`, Desktop derives a stable local identity from the actual calling client npm package name; valid existing repository identities are retained.
 
 The following identifiers have distinct purposes and must not be conflated:
@@ -82,7 +82,7 @@ Desktop lowercases GitHub owner and repository, so `https://github.com/Owner/Rep
 Put one workbench in one package. Typical structure:
 
 ```text
-package.json          # npm and DSH plugin declaration
+package.json          # npm and COWIN Harness Desktop plugin declaration
 cordis.patch.yml      # insert the server entry in the plugin tree
 dsh/index.js          # server entry (exports["."])
 lib/client.js         # built client entry (exports["./client"])
@@ -123,7 +123,7 @@ This file is a YAML array. A workbench normally needs one `insert`:
 
 - **Required**: `name` is the package name, never a relative or absolute path.
 - An empty or comment-only file fails startup; write `[]` if no rows are needed.
-- `!!js` expressions evaluate at startup. `dshHomePath()` yields a path under the DSH data directory.
+- `!!js` expressions evaluate at startup. `dshHomePath()` yields a path under the COWIN Harness Desktop data directory.
 - When overriding an existing row, the patch **replaces the whole `config`**, rather than merging it. Include all keys that must remain. A workbench should not override Desktop or another plugin's rows.
 
 ### 3.4 Server entry
@@ -200,7 +200,7 @@ Do not treat a persistent conversation pane as the default product design for ev
 
 In either layout, make the business UI respond to the **actual width of its own container**. Window-wide media queries alone do not reflect the space left by the sidebar, split, or embedding. Use container queries or measure the business root; rearrange columns, collapse secondary information, or provide bounded scrolling when space is tight. Long Chinese headings, English identifiers, numbers, and action buttons must stay readable and usable, without single-character vertical wrapping, clipped controls, or page-wide horizontal overflow.
 
-DSH reserves shared entrances for the market, workbench switcher, and settings; the business panel must not cover them. A `customFrame` (Section 3.5) must stay within the host-assigned main content area. Its root should fill that area using normal flex layout. Internal absolute positioning, maximization, or drag-based repositioning must remain inside the host container's positioning and clipping boundaries, never cover Desktop's left session sidebar. Put the host-provided `conversation` node into the business layout for native sessions; do not build a second chat UI. Native conversation capabilities and mode switching continue to follow Desktop rules.
+COWIN Harness Desktop reserves shared entrances for the market, workbench switcher, and settings; the business panel must not cover them. A `customFrame` (Section 3.5) must stay within the host-assigned main content area. Its root should fill that area using normal flex layout. Internal absolute positioning, maximization, or drag-based repositioning must remain inside the host container's positioning and clipping boundaries, never cover Desktop's left session sidebar. Put the host-provided `conversation` node into the business layout for native sessions; do not build a second chat UI. Native conversation capabilities and mode switching continue to follow Desktop rules.
 
 ### Header layout: default and compact
 
@@ -242,9 +242,9 @@ Migration uses only the public registration field and toolbar marker, with no pr
 ## 5. Workbenches, sessions, and workspaces
 
 - One workbench may have many sessions; each session belongs to at most one workbench.
-- A workspace is a DSH Desktop project-file environment. A session bound to a workspace has at most one workspace. Different sessions in the same workspace may belong to different workbenches.
+- A workspace is a COWIN Harness Desktop project-file environment. A session bound to a workspace has at most one workspace. Different sessions in the same workspace may belong to different workbenches.
 - One workbench can use multiple workspaces, and different workbenches can use the same workspace.
-- Internal business records or projects are not DSH workspaces and need no duplicate binding. For example, metaphysics records and location-selection projects retain their own create/select flows. A DSH workspace directory is a user-chosen file location; opening or creating a business project does not automatically assign it to a workbench.
+- Internal business records or projects are not COWIN Harness Desktop workspaces and need no duplicate binding. For example, metaphysics records and location-selection projects retain their own create/select flows. A COWIN Harness Desktop workspace directory is a user-chosen file location; opening or creating a business project does not automatically assign it to a workbench.
 
 ## 6. Using a workbench without a bound session
 
@@ -252,7 +252,7 @@ Open the business panel immediately, even without a session or workspace. Browsi
 
 Check whether the current session belongs to this workbench only when an action depends on a session, such as sending an agent request or writing a draft. If unbound, guide the user to create or open a session at that action; do not block unrelated business features.
 
-Provide a clear action such as “New workbench session in this workspace” or “Choose a file location and start a workbench session.” A business record may be created first if it needs no filesystem. Once file storage or DSH workspace creation is required, call the host directory picker first; the user must choose an existing directory or explicitly create one in the system picker. Never silently create a folder in a default location, home directory, current repository, or guessed path. After confirming location, create workspace and session, register ownership, save business association, and populate an opening draft. On cancellation, leave no directory, empty project, workspace, session, or binding. Restore existing business records only from a location the user previously confirmed; if missing, ask for a new selection rather than recreating a same-named directory. On failure, retain retryable state and never silently choose an unrelated workspace.
+Provide a clear action such as “New workbench session in this workspace” or “Choose a file location and start a workbench session.” A business record may be created first if it needs no filesystem. Once file storage or COWIN Harness Desktop workspace creation is required, call the host directory picker first; the user must choose an existing directory or explicitly create one in the system picker. Never silently create a folder in a default location, home directory, current repository, or guessed path. After confirming location, create workspace and session, register ownership, save business association, and populate an opening draft. On cancellation, leave no directory, empty project, workspace, session, or binding. Restore existing business records only from a location the user previously confirmed; if missing, ask for a new selection rather than recreating a same-named directory. On failure, retain retryable state and never silently choose an unrelated workspace.
 
 If the user selects a business record or project before creating the first session, preserve that selection. When opening an existing session, restore its own business mapping first; do not let another session's latest selection overwrite it.
 
@@ -282,7 +282,7 @@ Check each applicable responsibility after development. “Host responsibility�
 **Package and loading**
 
 - [ ] **Plugin**: All required items in Section 3 pass. Run `pnpm pack`; use `tar -tzf <artifact.tgz>` to confirm `package.json`, server and client entries, and `cordis.patch.yml`. Install that artifact rather than running only from source.
-- [ ] **Plugin**: Install under 3.6 and complete the required restart. If the agent runs inside the target DSH Desktop, the user must click “Restart now” in the top banner or choose Harness → Restart Harness; perform Agent checks once the user chooses continued verification and confirms the restart; independent trial does not require returning to the conversation. Find the plugin layer in `dsh --profile web --dump-config`, the entry in Desktop “Workbench management / Installed workbenches,” and the real business panel opened from the sidebar. Record configuration, list, and UI evidence separately; keep post-restart loading and UI checks pending until restart is confirmed.
+- [ ] **Plugin**: Install under 3.6 and complete the required restart. If the agent runs inside the target COWIN Harness Desktop, the user must click “Restart now” in the top banner or choose Harness → Restart Harness; perform Agent checks once the user chooses continued verification and confirms the restart; independent trial does not require returning to the conversation. Find the plugin layer in `dsh --profile web --dump-config`, the entry in Desktop “Workbench management / Installed workbenches,” and the real business panel opened from the sidebar. Record configuration, list, and UI evidence separately; keep post-restart loading and UI checks pending until restart is confirmed.
 
 **Section 4: UI boundary**
 
@@ -309,5 +309,5 @@ Final delivery must list actual results and evidence: changed files, package ver
 
 ## References
 
-- DSH plugin packaging and publication: `docs/user/develop/basic/publish.md` and `config.md` in deepseek-harness; package manifest types in `@deepseek-ai/dsh-package-manifest`; client module loading in `@deepseek-ai/dsh-client-modules`.
+- COWIN Harness Desktop plugin packaging and publication: `docs/user/develop/basic/publish.md` and `config.md` in deepseek-harness; package manifest types in `@deepseek-ai/dsh-package-manifest`; client module loading in `@deepseek-ai/dsh-client-modules`.
 - Market listing: [Workbench Market Acceptance Standard](https://dshdesktop.com/workbench/docs/market-acceptance-en/).

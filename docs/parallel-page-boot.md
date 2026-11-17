@@ -23,7 +23,7 @@ Verification: behavior tests for local serving, traversal and origin rejection, 
 
 The host cover applies during HTML bootstrapping and client activation, on
 `dsh-app://app/` and on a loopback page that belongs to the current Host. It paints the same
-`startup-whale.gif` as the startup page, in a preload-owned shadow root,
+`startup-brand.svg` as the startup page, in a preload-owned shadow root,
 because plugin slots are not yet available. It does not change Profile composition,
 module resolution, bootstrap ordering, API routing, or the normal/Safe Mode backend anchors.
 

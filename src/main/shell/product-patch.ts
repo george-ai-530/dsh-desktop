@@ -16,6 +16,8 @@ function hasEnterprisePlugin(): boolean {
 /**
  * Desktop profile overlay. Analytics and the official account page stay off.
  * The official sidebar brand is replaced by the product client UI.
+ * The prompt identity names the product runtime (COWIN Harness) instead of the
+ * upstream harness, and the upstream dev-context prompt sections stay off.
  * The normal profile also mounts workbenches, the plugin market installer,
  * Office, and PPT. Safe Mode keeps the account and brand overlay only.
  */
@@ -30,6 +32,19 @@ const DESKTOP_PRODUCT_PATCH_BASE = `- id: desktop-product-telemetry
 - id: deepseek-account
   config:
     desktopPlatform: null
+# A patch replaces the row's whole config, so the upstream personaPrefix from
+# the web layer is restated with the product name; includeHarnessIdentity off
+# keeps the upstream "powered by DeepSeek Harness" section out of every scope.
+- id: system-prompt
+  config:
+    includeHarnessIdentity: false
+    personaPrefix: >-
+      You are a coding agent running on COWIN Harness, powered by the
+      {{model}} model.
+# Dev-context prompt sections name the DeepSeek Harness checkout and Web GUI;
+# the product build has no use for them and they leak the upstream brand.
+- id: harness-dev-context
+  disabled: true
 - insert:
     - id: dsh-desktop-client-ui
       name: dsh-desktop-client-ui

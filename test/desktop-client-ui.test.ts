@@ -10,8 +10,8 @@ interface Registration {
   component: (props: Record<string, unknown>) => unknown
 }
 
-describe('DSH Desktop client slot occupants', () => {
-  it('registers one occupant per brand seat and keeps the official name mark-free', async () => {
+describe('COWIN Harness Desktop client slot occupants', () => {
+  it('registers one occupant per brand seat with the COWIN mark and wordmark', async () => {
     const source = await readFile(
       path.join(projectRoot, 'packages', 'dsh-desktop-client-ui', 'client.js'),
       'utf8'
@@ -52,8 +52,6 @@ describe('DSH Desktop client slot occupants', () => {
       type,
       props: { ...props, children }
     })
-    const BrandWordmark = vi.fn()
-    const FishLogo = vi.fn()
     const plugin = definition!.factory((id) => {
       if (id === 'react') {
         return {
@@ -63,7 +61,7 @@ describe('DSH Desktop client slot occupants', () => {
         }
       }
       if (id === '@deepseek-ai/dsh-client-ui-primitives') {
-        return { BrandWordmark, FishLogo }
+        return { MenuItemButton: vi.fn(), Tooltip: vi.fn() }
       }
       throw new Error(`Unexpected client dependency: ${id}`)
     })
@@ -91,36 +89,45 @@ describe('DSH Desktop client slot occupants', () => {
     expect(registrations.map(({ config }) => config.name)).toEqual([
       'conversation.input.dock',
       'sidebar.settings.action',
-      'settings.sidebar.footer',
       'sidebar.brand.mark',
       'sidebar.brand.name',
       'conversation.hero.brand.mark',
+      'conversation.hero.brand.title',
       'sidebar.right.tab.document.unpreviewable',
       'sidebar.workspaces.session.menu.item',
       'sidebar.workspaces.session.menu.item',
       'sidebar.workspaces.session.menu.item'
     ])
-    const enterprise = registrations.find(({ config }) => config.name === 'settings.sidebar.footer')
-    expect(enterprise?.config.id).toBe('desktop-enterprise-entry')
-    const entry = enterprise!.component({ t: () => '了解企业版' }) as { type: unknown; props: Record<string, unknown> }
-    expect(entry.type).toBe('a')
-    expect(entry.props.href).toBe('https://dshdesktop.com/zh/enterprise/')
-    expect(entry.props.target).toBe('_blank')
-    expect(entry.props.rel).toBe('noopener noreferrer')
-    expect(entry.props.children).toContain('了解企业版')
-    // Desktop toolbar styles have an owned lifetime; branding stays in currentColor.
+    // The enterprise footer entry was removed with the COWIN rebrand: no
+    // dshdesktop.com links remain in user-visible chrome.
+    expect(registrations.some(({ config }) => config.id === 'desktop-enterprise-entry')).toBe(false)
+    // Desktop toolbar styles have an owned lifetime; the sidebar brand stays
+    // in currentColor.
     expect(appended).toHaveLength(1)
     expect(appended[0]?.textContent).toContain("[data-dsh-preset-search]")
     expect(appended[0]?.textContent).toContain("[data-dsh-market-nav-icon] span[class*=\"navIcon\"]")
     expect(appended[0]?.textContent).toContain("[data-dsh-better-sidebar-settings-nav] span[class*=\"navIcon\"]")
+    // The hero bitmap variants swap on the upstream dark-theme marker; the
+    // plugin never branches its colors on it (tokens do that).
+    expect(appended[0]?.textContent).toContain('[data-dsh-desktop-hero-mark="light"]')
+    expect(appended[0]?.textContent).toContain('body[data-ds-dark-theme] [data-dsh-desktop-hero-mark="dark"]')
+    // The COWIN accent family rides in the same id-guarded style block; both
+    // theme variants are defined statically (the upstream dark block selects
+    // the -dark variables, so this plugin never branches on the theme marker).
+    for (const variable of ['--dsh-desktop-accent-400', '--dsh-desktop-accent-450', '--dsh-desktop-accent-500', '--dsh-desktop-accent-400-dark', '--dsh-desktop-accent-450-dark', '--dsh-desktop-accent-500-dark']) {
+      expect(appended[0]?.textContent).toContain(variable)
+    }
     disposeStyle?.()
     expect(removeStyle).toHaveBeenCalledOnce()
 
     const sidebarName = registrations.find(
       ({ config }) => config.name === 'sidebar.brand.name'
     )!.component({}) as { type: unknown; props: Record<string, unknown> }
-    expect(sidebarName.type).toBe(BrandWordmark)
-    expect(sidebarName.props.includeMark).toBe(false)
+    expect(sidebarName.type).toBe('svg')
+    // The outlined COWIN wordmark replaces the upstream BrandWordmark text.
+    const [namePath] = sidebarName.props.children as Array<{ type: unknown; props: Record<string, unknown> }>
+    expect(namePath?.type).toBe('path')
+    expect(String(namePath?.props.d)).toContain('Q')
 
     const sidebarMark = registrations.find(
       ({ config }) => config.name === 'sidebar.brand.mark'
@@ -132,10 +139,30 @@ describe('DSH Desktop client slot occupants', () => {
     expect(markPath.type).toBe('path')
     expect(markPath.props.fill).toBe('currentColor')
 
+    // The hero carries the official bitmap lockup: light and dark variants
+    // (embedded by `npm run brand:sync`) swap via the plugin style block.
     const heroMark = registrations.find(
       ({ config }) => config.name === 'conversation.hero.brand.mark'
-    )!.component({ size: 48 }) as { type: unknown; props: Record<string, unknown> }
-    expect(heroMark.type).toBe(FishLogo)
-    expect(heroMark.props.size).toBe(48)
+    )!.component({ size: 48 }) as { type: unknown; props: { children: unknown } }
+    const heroVariants = (Array.isArray(heroMark.props.children)
+      ? heroMark.props.children
+      : [heroMark.props.children]) as Array<{ type: unknown; props: Record<string, unknown> }>
+    expect(heroVariants).toHaveLength(2)
+    expect(heroVariants.map(variant => variant.props['data-dsh-desktop-hero-mark'])).toEqual(['light', 'dark'])
+    for (const variant of heroVariants) {
+      expect(variant.type).toBe('img')
+      expect(String(variant.props.src)).toMatch(/^data:image\/png;base64,/u)
+      expect(variant.props.height).toBe(48)
+    }
+
+    const heroTitle = registrations.find(
+      ({ config }) => config.name === 'conversation.hero.brand.title'
+    )!.component({ t: (key: string) => key }) as unknown
+    // The COWIN tagline replaces the upstream 探索未至之境 fallback text.
+    expect(heroTitle).toBe('heroTitle')
+    const heroConfig = registrations.find(
+      ({ config }) => config.name === 'conversation.hero.brand.title'
+    )!.config
+    expect(heroConfig.id).toBe('desktop-hero-title')
   })
 })
