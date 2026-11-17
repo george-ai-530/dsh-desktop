@@ -1,11 +1,11 @@
 {
   "name": "dsh-desktop",
   "version": "0.12.1",
-  "description": "A cross-platform desktop shell for DeepSeek Harness.",
+  "description": "A cross-platform desktop shell for COWIN Harness.",
   "private": true,
   "type": "module",
   "main": "./out/main/index.js",
-  "author": "DataElement",
+  "author": "COWIN",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -524,7 +524,7 @@
     "linux": {
       "target": [{ "target": "deb", "arch": ["x64"] }],
       "executableName": "dsh-desktop",
-      "maintainer": "DataElement",
+      "maintainer": "COWIN",
       "icon": "build/app-icon.png",
       "category": "Utility",
       "artifactName": "cowin-harness-desktop-linux-${arch}-${version}.${ext}"

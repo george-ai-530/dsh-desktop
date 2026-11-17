@@ -25,7 +25,7 @@ describe('Linux native packaging', () => {
   it('ships a deb with a stable executable and retains every runtime gate', () => {
     expect(manifest.build.linux).toMatchObject({
       executableName: 'dsh-desktop',
-      maintainer: 'DataElement',
+      maintainer: 'COWIN',
       category: 'Utility',
       target: [{ target: 'deb', arch: ['x64'] }]
     })

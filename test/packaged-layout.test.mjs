@@ -49,7 +49,7 @@ it.each([['production', packageJson.build, 'dsh-desktop'], ['development', devCo
     // so their failures cannot escape as unhandled background rejections.
     await target.scriptFiles
     expect(await target.computeFpmMetaInfoOptions()).toEqual({
-      name: packageName, maintainer: 'DataElement', vendor: 'DataElement', url: packageJson.homepage
+      name: packageName, maintainer: 'COWIN', vendor: 'COWIN', url: packageJson.homepage
     })
     delete target.options.maintainer
     await expect(target.computeFpmMetaInfoOptions()).rejects.toThrow('email')
