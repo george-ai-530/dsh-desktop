@@ -57,7 +57,8 @@ describe('optional product content slots', () => {
     const view = HeroShell({ t: key => ({ 'hero.headline': 'Welcome', 'hero.preview': 'Preview' }[key]), renderSlot: (name, props, options) => { calls.push(name); return name === 'conversation.hero.brand.title' && contribution ? 'Product headline' : options?.fallback }, children: 'Composer' })
     const nodes = flatten(expand(view))
     expect(nodes).toContain(contribution ? 'Product headline' : 'Welcome')
-    expect(nodes).toContain('Preview')
+    // 预览版徽标已移除，headline 文本直接来自 slot 或其回退。
+    expect(nodes).not.toContain('Preview')
     expect(nodes).toContain('Composer')
     expect(calls.filter(name => name === 'conversation.hero.brand.title')).toHaveLength(1)
   })

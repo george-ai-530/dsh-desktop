@@ -18,6 +18,14 @@ function hasEnterprisePlugin(): boolean {
  * The official sidebar brand is replaced by the product client UI.
  * The prompt identity names the product runtime (COWIN Harness) instead of the
  * upstream harness, and the upstream dev-context prompt sections stay off.
+ * The upstream entry-customization plugin drives the sidebar「更多」menu and the
+ * conversation tab-row「…」menu; both are removed from the product surface.
+ * The Session-log upload switch row goes away with its setting, and the
+ * session-log-deepseek bundle is forced off (its upstream default is on).
+ * The plugins settings section and its occupants (Built-in plugins nav, the
+ * plugin market nav from dsh-desktop-market-installer, and the companion
+ * settings pages) are removed together; every occupant of the slots the
+ * section declares must be disabled with it.
  * The normal profile also mounts workbenches, the plugin market installer,
  * Office, and PPT. Safe Mode keeps the account and brand overlay only.
  */
@@ -28,6 +36,25 @@ const DESKTOP_PRODUCT_PATCH_BASE = `- id: desktop-product-telemetry
 - id: ui-settings-account
   disabled: true
 - id: ui-brand-official
+  disabled: true
+- id: entry-customization
+  disabled: true
+- id: ui-settings-session-log
+  disabled: true
+- id: session-log-deepseek
+  config:
+    enabled: false
+- id: ui-settings-plugins
+  disabled: true
+- id: ui-settings-plugin-inventory
+  disabled: true
+- id: ui-settings-shell
+  disabled: true
+- id: ui-settings-agent-loop
+  disabled: true
+- id: ui-settings-subagent
+  disabled: true
+- id: ui-settings-web-search
   disabled: true
 - id: deepseek-account
   config:

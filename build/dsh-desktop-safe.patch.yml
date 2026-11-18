@@ -15,6 +15,29 @@
 - id: ui-settings-account
   disabled: true
 
+# Safe Mode 覆盖整个窗口；入口自定义插件一并停用，与普通 overlay 一致。
+- id: entry-customization
+  disabled: true
+
+# Session Log 上传与插件设置区在恢复界面同样不可达；与普通 overlay 保持一致。
+- id: ui-settings-session-log
+  disabled: true
+- id: session-log-deepseek
+  config:
+    enabled: false
+- id: ui-settings-plugins
+  disabled: true
+- id: ui-settings-plugin-inventory
+  disabled: true
+- id: ui-settings-shell
+  disabled: true
+- id: ui-settings-agent-loop
+  disabled: true
+- id: ui-settings-subagent
+  disabled: true
+- id: ui-settings-web-search
+  disabled: true
+
 - id: agent-default-model
   disabled: false
 

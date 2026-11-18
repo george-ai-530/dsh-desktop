@@ -15,9 +15,13 @@ afterEach(async () => {
 describe('patch lock', () => {
   it('matches the tracked patches to the lockfile release set', async () => {
     const patches = (await readdir(join(root, 'patches'))).filter(name => name.endsWith('.patch'))
-    expect(patches).toHaveLength(42)
+    expect(patches).toHaveLength(43)
     expect(patches).toContain('@deepseek-ai+dsh-client-ui-layout+0.2.2-rc.1.patch')
     expect(patches).toContain('@deepseek-ai+dsh-client-ui-theme+0.2.2-rc.1.patch')
+    // 会话头部的固定「更多」菜单随产品精简移除，补丁改由本仓库维护。
+    expect(patches).toContain('@deepseek-ai+dsh-session-log-export+0.2.2-rc.1.patch')
+    // 通用设置「当前版本」行固定为产品展示版本（补丁在原文件上扩展）。
+    expect(patches).toContain('@deepseek-ai+dsh-client-ui-settings-general+0.2.2-rc.1.patch')
     expect(patches).toEqual(expect.arrayContaining([
       '@deepseek-ai+node-addon-system+0.1.2.patch',
       'sherpa-onnx-node+1.13.8.patch',

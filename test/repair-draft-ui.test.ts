@@ -34,39 +34,18 @@ async function load(bridge: unknown) {
 }
 
 describe('repair draft admission', () => {
-  it('styles desktop utility buttons without changing other settings contributions', async () => {
-    const { dom } = await load({ openRepairAgent: vi.fn(), openMobilePairing: vi.fn() })
-    try {
-      const { document } = dom.window
-      document.body.innerHTML = '<div data-dsh-sidebar-settings-actions><button id="other">Long plugin action</button><div data-dsh-desktop-utilities data-wide="false"><button id="repair">Repair</button></div></div>'
-      const button = document.querySelector('#repair')!
-      const group = document.querySelector('[data-dsh-desktop-utilities]')!
-      const style = dom.window.getComputedStyle(button)
-      expect(style.display).toBe('inline-flex')
-      expect(style.width).toBe('32px')
-      expect(style.height).toBe('32px')
-      expect(style.borderTopWidth).toBe('0px')
-      expect(style.borderRadius).toBe('8px')
-      expect(dom.window.getComputedStyle(group).gap).toBe('4px')
-      expect(dom.window.getComputedStyle(group).justifyContent).toBe('center')
-      expect(dom.window.getComputedStyle(document.querySelector('#other')!).width).not.toBe('32px')
-    } finally {
-      dom.window.document.body.replaceChildren()
-    }
+  it('removes the settings-row utility icons but keeps the repair draft seam', async () => {
+    const { registrations } = await load({ getRepairDraft: vi.fn(async () => undefined), openRepairAgent: vi.fn(), openMobilePairing: vi.fn() })
+    // 设置旁的维修/手机快捷图标随产品精简移除；会话输入框的维修草稿接缝保留。
+    expect(registrations.has('desktop-utilities')).toBe(false)
+    expect(registrations.has('desktop-repair-draft')).toBe(true)
   })
-  it('places Desktop actions next to Settings and stacks them only when collapsed', async () => {
+  it('no longer injects the settings action row styles', async () => {
     const { dom } = await load({ openRepairAgent: vi.fn(), openMobilePairing: vi.fn() })
-    document.body.innerHTML = '<div data-dsh-sidebar-settings><div data-dsh-sidebar-settings-content>Settings</div><div data-dsh-sidebar-settings-actions><div data-dsh-desktop-utilities data-wide="true"></div></div></div>'
-    try {
-      const row = document.querySelector('[data-dsh-sidebar-settings]')!
-      expect(dom.window.getComputedStyle(row).display).toBe('flex')
-      expect(dom.window.getComputedStyle(row).flexDirection).toBe('row')
-      expect(dom.window.getComputedStyle(row).alignItems).toBe('center')
-      document.querySelector('[data-dsh-desktop-utilities]')!.setAttribute('data-wide', 'false')
-      expect(dom.window.getComputedStyle(row).flexDirection).toBe('column')
-    } finally {
-      document.body.replaceChildren()
-    }
+    const style = dom.window.document.querySelector('style#dsh-desktop-preset-toolbar-style')
+    expect(style?.textContent).toBeDefined()
+    expect(style?.textContent).not.toContain('data-dsh-desktop-utilities')
+    expect(style?.textContent).not.toContain('[data-dsh-sidebar-settings]:has(')
   })
 
   it.each([['empty', '', [], true], ['existing text', 'my question', [], false], ['attachment', '', ['file'], false]] as const)(
@@ -94,28 +73,15 @@ describe('repair draft admission', () => {
     expect(actions.persistDraft).not.toHaveBeenCalled()
     expect(actions.submit).not.toHaveBeenCalled()
   })
-  it('renders an accessible wrench beside the phone and routes the two actions separately', async () => {
-    const bridge = { openRepairAgent: vi.fn(async () => ({ ok: true })), openMobilePairing: vi.fn(async () => undefined) }
-    const { registrations } = await load(bridge)
-    const view = registrations.get('desktop-utilities')!({ t: (key: string) => key, wide: true }) as {
-      children: Array<{ type: string; props: Record<string, unknown>; children: unknown[] }>
-    }
-    const [tooltip, phone] = view.children
-    const repair = tooltip?.children[0] as typeof phone
-    expect(tooltip?.type).toBe('Tooltip')
-    expect(tooltip?.props).toMatchObject({ label: 'description', side: 'top', align: 'end', portal: true, maxWidth: 280, delayMs: 0, focusDelayMs: 0 })
-    expect(repair?.props['data-dsh-repair-entry']).toBe(true)
-    expect(phone?.props['data-dsh-mobile-entry']).toBe(true)
-    expect(repair?.props['aria-label']).toBe('open')
-    expect(repair?.props['aria-description']).toBe('description')
-    expect(repair?.props.title).toBeUndefined()
-    expect(repair?.children[0]).toMatchObject({ type: 'svg', props: { width: 18, height: 18, viewBox: '0 0 24 24' } })
-    expect(phone?.children[0]).toMatchObject({ type: 'svg', props: { width: 18, height: 18, viewBox: '0 0 24 24' } })
-    expect(repair?.children).not.toContain('open')
-    ;(repair?.props.onClick as () => void)()
-    await vi.waitFor(() => expect(bridge.openRepairAgent).toHaveBeenCalledOnce())
-    ;(phone?.props.onClick as () => void)()
-    await vi.waitFor(() => expect(bridge.openMobilePairing).toHaveBeenCalledOnce())
+  it('keeps the repair draft resident without a header utility registration', async () => {
+    const bridge = { getRepairDraft: vi.fn(async () => ({ text: 'repair', token: 't' })), acknowledgeRepairDraft: vi.fn(async () => ({ ok: true })) }
+    const { registrations, effects } = await load(bridge)
+    expect(registrations.has('desktop-utilities')).toBe(false)
+    const actions = { captureInsertion: () => ({ draftRev: 0 }), insertText: vi.fn(() => true), persistDraft: vi.fn(), submit: vi.fn() }
+    registrations.get('desktop-repair-draft')!({ session: { sessionId: 's' }, input: { draft: '', attachmentIds: [], phase: 'plain' }, inputActions: actions })
+    effects[0]!()
+    await vi.waitFor(() => expect(bridge.acknowledgeRepairDraft).toHaveBeenCalled())
+    expect(actions.insertText).toHaveBeenCalledOnce()
   })
   it('does not persist a rejected revision or apply a draft after unmount', async () => {
     let finish: (value: { text: string; token: string }) => void = () => undefined

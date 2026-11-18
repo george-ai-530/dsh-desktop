@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js
-index 8f7ad1e..9a33b16 100644
+index 8f7ad1e..a5cdc7b 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js
 @@ -82,6 +82,7 @@ window.__ModuleLoader__.load({
@@ -144,7 +144,7 @@ index 8f7ad1e..9a33b16 100644
 +						fallback: panels.length > 0 && (0, react_jsx_runtime.jsxs)("nav", {
 +							className: SidebarRoot_module_css_default.panelList,
 +							"aria-label": t("panels.label"),
-+							children: [panels.filter(({ id }) => id === "plugins" || !unpinned.includes(id)).map(({ id, label }) => (0, react_jsx_runtime.jsx)(PanelRow, {
++							children: [panels.filter(({ id }) => id !== "plugins" && !unpinned.includes(id)).map(({ id, label }) => (0, react_jsx_runtime.jsx)(PanelRow, {
  								id,
  								label,
 -								pinned: !unpinned.includes(id),

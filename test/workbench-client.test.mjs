@@ -127,50 +127,8 @@ function interactiveMarket(service, tab = 'market', clipboard) {
   }
 }
 
-function sidebarSwitcher({ pinned = [], active = null, title = '工作台', workbenchId = 'writer' } = {}) {
-  let renderSidebar
-  let stateIndex = 0
-  const state = []
-  const layoutEffects = []
-  const react = {
-    createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
-    Component: class {},
-    useState: initial => {
-      const index = stateIndex++
-      if (!(index in state)) state[index] = initial
-      return [state[index], value => { state[index] = typeof value === 'function' ? value(state[index]) : value }]
-    },
-    useRef: initial => ({ current: initial }),
-    useLayoutEffect: effect => { layoutEffects.push(effect) },
-    useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot()
-  }
-  const sandbox = { window: { sessionStorage, localStorage: clientWindow.localStorage, __ModuleLoader__: { load({ factory }) {
-    factory(name => name === 'react' ? react : name === '@deepseek-ai/cordis' ? { Service } : { Button: ({ children, icon, variant, ...props }) => React.createElement('button', props, icon, children), IconDownloadOutlineRegular: () => null, Menu: ({ anchor }) => anchor, Switch: () => null })
-  } } }, document, setTimeout, clearTimeout, AbortController }
-  vm.runInNewContext(code.replace('    function MetaItem(', '    globalThis.__testSidebarSwitcher = WorkbenchSidebarSwitcher\n    function MetaItem('), sandbox)
-  sandbox.window.innerHeight = 800
-  sandbox.window.addEventListener = vi.fn()
-  sandbox.window.removeEventListener = vi.fn()
-  renderSidebar = sandbox.__testSidebarSwitcher
-  const entry = { id: workbenchId, title, icon: '✦' }
-  const service = {
-    subscribe: () => () => {},
-    getSnapshot: () => ({ state: { pinned, added: pinned, active, sessionBindings: {} }, catalog: pinned.map(() => entry), ready: true, pending: 0, marketOpen: false }),
-    catalog: new Map(pinned.map(id => [id, entry])),
-    activationFor: () => 'unknown',
-    pluginFor: () => null,
-    blocked: false,
-    showMarket: vi.fn(), open: vi.fn(), openNative: vi.fn(), run: vi.fn()
-  }
-  let activePanelId = null
-  const render = () => { stateIndex = 0; return renderSidebar({ service, wide: true, startSession: vi.fn(), usePanelInfo: selector => selector({ activePanelId }) }) }
-  const find = (node, predicate) => {
-    if (Array.isArray(node)) return node.flatMap(item => find(item, predicate))
-    if (!node || typeof node !== 'object') return []
-    return [...(predicate(node) ? [node] : []), ...find(node.props?.children, predicate)]
-  }
-  return { render, find, service, window: sandbox.window, runMenuLayout: () => layoutEffects.at(-1)(), selectPanel: id => { activePanelId = id } }
-}
+// 侧栏顶部的工作台切换器已按产品要求移除；侧栏形态相关断言并入
+// 「renders a persistent Workbench home area…」改写后的来源契约测试。
 
 afterEach(() => { vi.clearAllTimers(); vi.useRealTimers(); sidebarWide = false; sidebarCollapsed = false; sessionStorage.clear() })
 
@@ -299,17 +257,12 @@ describe('desktop workbench client navigation', () => {
     service.installs = { writer: { pluginName: 'writer' } }
     await service.refreshNative()
     expect(service.activationFor(service.catalog.get('writer'))).toBe('on')
-    let ui = sidebarSwitcher({ pinned: ['writer'] })
-    ui.service.activationFor = entry => service.activationFor(entry)
-    expect(ui.find(ui.render(), node => node.props?.className === 'dshWbModeSwitch')).toHaveLength(1)
     await service.setPluginEnabled('writer', false)
     expect(ctx.remote.pluginManager.setBundleEnabled).toHaveBeenCalledWith('writer', false)
     expect(service.activationFor(service.catalog.get('writer'))).toBe('off')
-    expect(ui.find(ui.render(), node => node.props?.className === 'dshWbModeSwitch')).toHaveLength(0)
     enabled = true // The native Plugins page changed it.
     await service.refreshNative()
     expect(service.activationFor(service.catalog.get('writer'))).toBe('on')
-    expect(ui.find(ui.render(), node => node.props?.className === 'dshWbModeSwitch')).toHaveLength(1)
     ctx.remote.pluginManager.setBundleEnabled.mockResolvedValueOnce({ ok: true, value: { changed: false, application: 'failed', error: { diagnostic: 'native failure' } } })
     await expect(service.setPluginEnabled('writer', false)).rejects.toThrow('native failure')
     expect(service.activationFor(service.catalog.get('writer'))).toBe('on')
@@ -331,20 +284,14 @@ describe('desktop workbench client navigation', () => {
     setFiberPackage(ctx, 'helper')
     const unregister = service.register({ title: 'Helper' }, () => null)
     await service.refreshNative()
-    const nav = sidebarSwitcher({ pinned: ['o/helper'], workbenchId: 'o/helper' })
-    nav.service.getSnapshot = () => service.getSnapshot()
-    nav.service.catalog = service.catalog
-    nav.service.activationFor = entry => service.activationFor(entry)
-    expect(nav.find(nav.render(), node => node.props?.className === 'dshWbModeSwitch')).toHaveLength(1)
+    const listedEntry = () => service.getSnapshot().catalog.find(item => item.catalogId === 'o/helper')
 
+    expect(service.activationFor(listedEntry())).toBe('on')
     await service.setPluginEnabled('helper', false)
     unregister() // Native plugin shutdown unloads its client provider.
-    const listedEntry = () => service.getSnapshot().catalog.find(item => item.catalogId === 'o/helper')
     expect(service.pluginFor(listedEntry())).toBe('helper')
     expect(service.activationFor(listedEntry())).toBe('off')
     expect(listedEntry().loadFailure).toBe('')
-    nav.service.catalog = service.catalog
-    expect(nav.find(nav.render(), node => node.props?.className === 'dshWbModeSwitch')).toHaveLength(0)
 
     const mine = interactiveMarket(service, 'mine')
     const card = mine.find(mine.render(), node => node.type === 'article')[0]
@@ -366,11 +313,9 @@ describe('desktop workbench client navigation', () => {
     toggle.props.onClick()
     await vi.waitFor(() => expect(ctx.remote.pluginManager.setBundleEnabled).toHaveBeenCalledWith('helper', true))
     await vi.waitFor(() => expect(service.activationFor(listedEntry())).toBe('on'))
-    expect(nav.find(nav.render(), node => node.props?.className === 'dshWbModeSwitch')).toHaveLength(0)
     setFiberPackage(ctx, 'helper')
     service.register({ title: 'Helper' }, () => null)
-    nav.service.catalog = service.catalog
-    expect(nav.find(nav.render(), node => node.props?.className === 'dshWbModeSwitch')).toHaveLength(1)
+    expect(service.activationFor(listedEntry())).toBe('on')
   })
 
   it('remembers an unlisted local provider when its native bundle is disabled', async () => {
@@ -970,7 +915,8 @@ describe('desktop workbench client navigation', () => {
     cleanup?.()
     expect(styles).toHaveLength(1)
     expect(styles[0].dataset.plugin).toBe('dsh-desktop-workbenches')
-    expect(styles[0].textContent).toContain('.dshWbWorkbenchHome')
+    expect(styles[0].textContent).not.toContain('.dshWbWorkbenchHome')
+    expect(styles[0].textContent).toContain('.dshWbSrOnly')
     expect(styles[0].textContent).toContain('min-height:0;flex:1 1 0')
     expect(styles[0].textContent).toContain('-webkit-line-clamp:3')
     styleEffect()
@@ -2362,139 +2308,19 @@ describe('workbench market screenshot and metadata display', () => {
     expect(fullSource).not.toContain('未安装')
   })
 
-  it('fits the mode menu below its anchor and updates and cleans up on window resize', () => {
-    const fixture = sidebarSwitcher({ pinned: ['writer'] })
-    let tree = fixture.render()
-    fixture.find(tree, node => node.props?.className === 'dshWbModeSwitch')[0].props.onClick()
-    tree = fixture.render()
-    const menu = fixture.find(tree, node => node.props?.className === 'dshWbModeMenu')[0]
-    const element = { style: {}, getBoundingClientRect: () => ({ top: 205 }) }
-    menu.props.ref.current = element
-    const cleanup = fixture.runMenuLayout()
-    expect(element.style.maxHeight).toBe('587px')
-    const [event, resize] = fixture.window.addEventListener.mock.calls[0]
-    expect(event).toBe('resize')
-    fixture.window.innerHeight = 400
-    resize()
-    expect(element.style.maxHeight).toBe('187px')
-    fixture.window.innerHeight = 100
-    resize()
-    expect(element.style.maxHeight).toBe('0px')
-    cleanup()
-    expect(fixture.window.removeEventListener).toHaveBeenCalledWith('resize', resize)
-  })
-
-  it('renders a persistent Workbench home area beside the current mode and switch button', () => {
-    expect(fullSource).toContain('function WorkbenchSidebarSwitcher({ service, wide, startSession, usePanelInfo })')
-    expect(fullSource).toContain("'data-dsh-workbench-switcher': ''")
-    expect(fullSource).toContain("className: 'dshWbModeSwitch', 'aria-describedby': 'dsh-wb-current-mode-tooltip'")
-    expect(fullSource).toContain("role: 'menu', 'aria-label': tr('选择会话模式')")
-    expect(fullSource).toContain("role: 'menuitemradio'")
-    expect(fullSource).toContain('service.openNative(startSession)')
-    expect(fullSource).toContain("name: 'home'")
-    expect(fullSource).not.toContain('dshWbSidebarTooltip')
-    expect(fullSource).toContain("active?.title || tr('会话')")
-    expect(fullSource).toContain("title: tr('工作台主页'), 'aria-label': tr('打开工作台主页')")
-    expect(fullSource).toContain('setOpen(false); service.showMarket()')
-    expect(fullSource).toContain('.dshWbWorkbenchHome{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex:0 0 auto;min-width:88px;')
-    expect(fullSource).toContain('.dshWbSidebarSwitcher:is([data-selected=true],:hover,:focus-within){border-radius:var(--dsw-radius-md);background:var(--dsw-alias-interactive-bg-hover)}')
-    expect(fullSource).not.toContain('.dshWbModeSwitch:hover:not(:disabled),.dshWbModeSwitch[aria-expanded=true]{background:')
-    expect(fullSource).toContain('min-height:36px;margin:0 2px 8px;padding:0;')
-    expect(fullSource).toContain('.dshWbModeSwitch svg{flex:0 0 auto;color:var(--dsw-alias-label-tertiary)}')
-    expect(fullSource).toContain('.dshWbCurrentModeLabel{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}')
-    expect(fullSource).toContain('.dshWbModeMenu{position:absolute;z-index:32;left:2px;right:2px;')
-    expect(fullSource).toContain('background:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary-foreground)')
-    expect(fullSource).toContain("ctx.slots.inject('sidebar.quickSwitcher'")
+  it('removes the sidebar workbench switcher from the product surface', () => {
+    // 产品精简：侧栏顶部的「工作台/会话」切换器不再注入，组件与专属样式整体删除。
+    expect(fullSource).not.toContain('function WorkbenchSidebarSwitcher(')
+    expect(fullSource).not.toContain("ctx.slots.inject('sidebar.quickSwitcher'")
+    expect(fullSource).not.toContain("'data-dsh-workbench-switcher'")
+    expect(fullSource).not.toContain("title: tr('工作台主页'), 'aria-label': tr('打开工作台主页')")
+    expect(fullSource).not.toContain("ctx.slots.inject('sidebar.panellist'")
     expect(fullSource).not.toContain('function WorkbenchDock(')
     expect(fullSource).not.toContain('dshWbDockWrap')
     expect(fullSource).toContain("id: 'desktop-restart-notice'")
     expect(fullSource).not.toContain('dshWbNavItems')
-  })
-
-  it('uses one compact grip per Workbench and keeps selection rows non-draggable', () => {
-    expect(fullSource).toContain("pinned.length > 1 && h('button', { type: 'button', role: 'menuitem', className: 'dshWbModeDragHandle', draggable: !disabled")
-    expect(fullSource).toContain("h(MarketIcon, { name: 'gripVertical', size: 16 })")
-    expect(fullSource).toContain("if (name === 'gripVertical') return h('svg', common")
-    expect(fullSource).toContain("h('circle', { cx: 9, cy: 7, r: 1, fill: 'currentColor', stroke: 'none' })")
-    expect(fullSource).not.toContain("className: 'dshWbModeOption', role: 'menuitemradio', draggable")
-    expect(fullSource).not.toContain('dshWbModeOrder')
-    expect(fullSource).not.toContain('dshWbModeOrderButton')
-    expect(fullSource).not.toContain("name: 'chevronUp', size: 11")
-    expect(fullSource).not.toContain("name: 'chevronDown', size: 11")
-  })
-
-  it('opens the Workbench homepage from its fixed hot area and switches by clicking the name or icon', () => {
-    const ui = sidebarSwitcher({ pinned: ['writer'], active: 'writer', title: '投标作战室' })
-    let tree = ui.render()
-    const home = ui.find(tree, node => node.props?.className === 'dshWbWorkbenchHome')[0]
-    const switchButton = ui.find(tree, node => node.props?.className === 'dshWbModeSwitch')[0]
-    expect(home.props['aria-label']).toBe('打开工作台主页')
-    expect(ui.find(switchButton, node => node.props?.className === 'dshWbCurrentModeLabel')[0].props.children).toEqual(['投标作战室'])
-    expect(ui.find(switchButton, node => node.type?.name === 'MarketIcon' && node.props?.name === 'switch')).toHaveLength(1)
-    expect(ui.find(tree, node => node.props?.className === 'dshWbCurrentMode')).toHaveLength(0)
-    expect(ui.find(tree, node => node.props?.className === 'dshWbCurrentModeIcon')).toHaveLength(0)
-    expect(switchButton.props['aria-expanded']).toBe(false)
-    expect(ui.find(switchButton, node => node.props?.id === switchButton.props['aria-describedby'])[0].props.children).toEqual(['投标作战室'])
-    switchButton.props.onClick()
-    tree = ui.render()
-    expect(ui.find(tree, node => node.props?.role === 'menu')).toHaveLength(1)
-    const modes = ui.find(tree, node => node.props?.role === 'menuitemradio')
-    expect(modes).toHaveLength(2)
-    expect(ui.find(modes[0], node => node.props?.className === 'dshWbModeOptionLabel')[0].props.children).toEqual(['会话'])
-    expect(modes.map(mode => mode.props['aria-checked'])).toEqual([false, true])
-    modes[0].props.onClick()
-    expect(ui.service.openNative).toHaveBeenCalledOnce()
-    tree = ui.render()
-    expect(ui.find(tree, node => node.props?.role === 'menu')).toHaveLength(0)
-    ui.find(tree, node => node.props?.className === 'dshWbModeSwitch')[0].props.onClick()
-    tree = ui.render()
-    home.props.onClick()
-    expect(ui.service.showMarket).toHaveBeenCalledOnce()
-    tree = ui.render()
-    expect(ui.find(tree, node => node.props?.role === 'menu')).toHaveLength(0)
-  })
-
-  it('shows 会话 without a switch button when no Workbench is pinned', () => {
-    const ui = sidebarSwitcher()
-    const tree = ui.render()
-    expect(ui.find(tree, node => node.props?.className === 'dshWbCurrentModeLabel')[0].props.children).toEqual(['会话'])
-    expect(ui.find(tree, node => node.props?.className === 'dshWbCurrentMode')[0].props['aria-label']).toBe('当前模式：会话')
-    expect(ui.find(tree, node => node.props?.className === 'dshWbModeSwitch')).toHaveLength(0)
-    expect(ui.find(tree, node => node.props?.className === 'dshWbWorkbenchHome')).toHaveLength(1)
-    expect(code).not.toContain('.dshWbCurrentModeIcon{')
-  })
-
-  it('supports native handle drag and drop with insertion-edge feedback', () => {
-    expect(fullSource).toContain("event.dataTransfer.effectAllowed = 'move'")
-    expect(fullSource).toContain("event.dataTransfer.setData('text/plain', item.id)")
-    expect(fullSource).toContain("event.dataTransfer.setData('application/x-dsh-workbench-id', item.id)")
-    expect(fullSource).toContain("const preview = event.currentTarget.closest('.dshWbModeOptionRow')")
-    expect(fullSource).toContain("if (preview && typeof event.dataTransfer.setDragImage === 'function') event.dataTransfer.setDragImage(preview, 12, 17)")
-    expect(fullSource).toContain("event.dataTransfer.dropEffect = 'move'")
-    expect(fullSource).toContain("if (sourceId === targetId) {")
-    expect(fullSource).toContain("if (dropTargetRef.current) { dropTargetRef.current = null; setDropTarget(null) }")
-    expect(fullSource).toContain("const edge = event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'")
-    expect(fullSource).toContain("const remaining = pinned.filter((entry) => entry.id !== sourceId)")
-    expect(fullSource).toContain("const before = edge === 'before' ? targetId : (remaining[targetIndex + 1]?.id ?? null)")
-    expect(fullSource).toContain("onDragStart: (event) => onDragStart(event, item), onDragEnd: clearDrag")
-    expect(fullSource).toContain("onDragOver: (event) => onDragOver(event, item.id), onDrop: (event) => onDrop(event, item.id)")
-    expect(fullSource).toContain('.dshWbModeOptionRow[data-dragging=true]{opacity:.46}')
-    expect(fullSource).toContain('.dshWbModeOptionRow[data-drop-edge=before]::before,.dshWbModeOptionRow[data-drop-edge=after]::after')
-    expect(fullSource).not.toContain('.dshWbModeOptionRow{transition')
-  })
-
-  it('keeps grip ordering keyboard accessible and announces successful moves', () => {
-    expect(fullSource).toContain("if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return")
-    expect(fullSource).toContain('event.preventDefault()')
-    expect(fullSource).toContain('event.stopPropagation()')
-    expect(fullSource).toContain("if (event.key === 'ArrowUp' && index > 0) move(item, index, pinned[index - 1].id, index)")
-    expect(fullSource).toContain("if (event.key === 'ArrowDown' && index < pinned.length - 1) move(item, index, pinned[index + 2]?.id ?? null, index + 2)")
-    expect(fullSource).toContain("'aria-keyshortcuts': 'ArrowUp ArrowDown', 'aria-roledescription': both('拖拽排序手柄', 'Reorder handle')")
-    expect(fullSource).toContain("'aria-label': both(`${item.title}，当前位置 ${index + 1}/${pinned.length}，使用上下方向键调整顺序`")
-    expect(fullSource).toContain("setAnnouncement(both(`${item.title} 已移至第 ${nextPosition} 位`")
-    expect(fullSource).toContain("className: 'dshWbSrOnly', role: 'status', 'aria-live': 'polite', 'aria-atomic': true")
-    expect(fullSource).not.toContain('aria-grabbed')
-    expect(fullSource).toContain('.dshWbModeDragHandle:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}')
+    // 会话图标仍通过 sidebar.session.leading 标注归属。
+    expect(fullSource).toContain("inject('sidebar.session.leading'")
   })
 
   it('keeps the submit page heading only in the market header', () => {
@@ -2508,10 +2334,9 @@ describe('workbench market screenshot and metadata display', () => {
     expect(fullSource).not.toContain("onClick: () => service.run(service.open(entry.id)) }, '打开工作台'")
   })
 
-  it('uses the top switcher as the only Workbench navigation entry', () => {
+  it('has no sidebar panel row for workbenches after the switcher removal', () => {
     expect(fullSource).not.toContain("ctx.slots.inject('sidebar.panellist'")
     expect(fullSource).not.toContain('function WorkbenchPanelIcon(')
-    expect(fullSource).toContain("title: tr('工作台主页'), 'aria-label': tr('打开工作台主页')")
   })
 
   it('does not fail the whole Workbench plugin when an older host lacks session filtering', () => {
@@ -2519,12 +2344,13 @@ describe('workbench market screenshot and metadata display', () => {
     expect(fullSource).toContain("typeof ctx.uiWorkspace.registerSessionStarter === 'function'")
   })
 
-  it('keeps the shortcut row on whenever the Workbench feature is enabled', () => {
+  it('keeps the master switch removed from settings while the feature stays on', () => {
     expect(fullSource).not.toContain('WORKBENCH_DOCK_PREF')
     expect(fullSource).not.toContain('workbenchDockPreference')
     expect(fullSource).not.toContain('显示工作台快捷栏')
-    expect(fullSource).toContain('if (!enabled || !wide) return null')
-    expect(fullSource).toContain("h(Switch, { checked: enabled, onChange: (next) => service.setEnabled(next), label: tr('启用工作台功能') })")
+    // 通用设置里的「启用工作台功能」开关随产品精简移除；偏好默认启用。
+    expect(fullSource).not.toContain('h(Switch, { checked: enabled, onChange: (next) => service.setEnabled(next)')
+    expect(fullSource).not.toContain('settings.general.item')
     expect(fullSource).toContain('if (!workbenchEnabled) return conversation')
   })
 
@@ -2830,21 +2656,14 @@ describe('workbench market screenshot and metadata display', () => {
     await service.refreshNative()
     await service.queue
 
-    const nav = sidebarSwitcher({ workbenchId: id })
-    nav.service.getSnapshot = () => service.getSnapshot()
-    nav.service.catalog = service.catalog
-    nav.service.activationFor = entry => service.activationFor(entry)
-    const switcher = () => nav.find(nav.render(), node => node.props?.className === 'dshWbModeSwitch')
     expect(service.state.pinned).not.toContain(id)
     expect(saved().state.added).not.toContain(id)
-    expect(switcher()).toHaveLength(0)
     expect(cardButtons(marketCard(service))).toContain('正在安装…')
 
     result.resolve(Response.json({ error: 'Install response failed' }, { status: 502 }))
     await rejection
     await service.refreshNative()
     expect(service.getSnapshot().catalog[0]).toMatchObject({ installed: false, failureKind: 'install', loadFailure: 'Install response failed' })
-    expect(switcher()).toHaveLength(0)
     expect(saved().state.pinned).not.toContain(id)
     const market = interactiveMarket(service)
     const card = market.find(market.render(), node => node.type === 'article')[0]
@@ -2855,7 +2674,6 @@ describe('workbench market screenshot and metadata display', () => {
     await service.installFromMarket(id)
     expect(service.getSnapshot().catalog[0]).toMatchObject({ installed: true, loadFailure: '' })
     expect(saved().state.pinned).toContain(id)
-    expect(switcher()).toHaveLength(1)
     expect(JSON.stringify(marketCard(service))).toContain('已安装')
   })
 
@@ -4335,35 +4153,6 @@ describe('workbench host localization', () => {
   })
 })
 
-
-describe('sidebar central panel selection', () => {
-  it('highlights the entire row for an active workbench frame, but not other panels', () => {
-    const ui = sidebarSwitcher({ pinned: ['writer'], active: 'writer', title: '装修工作台' })
-    const selected = () => ui.find(ui.render(), node => node.props?.['data-dsh-workbench-switcher'] === '')[0].props['data-selected']
-    expect(selected()).toBe('true')
-    ui.selectPanel('plugins')
-    expect(selected()).toBeUndefined()
-    ui.selectPanel('desktop-workbenches')
-    expect(selected()).toBe('true')
-  })
-
-  it('clears workbench selection when Plugins opens even with stale market restoration state', () => {
-    const ui = sidebarSwitcher()
-    const snapshot = ui.service.getSnapshot()
-    ui.service.getSnapshot = () => ({ ...snapshot, marketOpen: true })
-    const home = () => ui.find(ui.render(), node => node.props?.className === 'dshWbWorkbenchHome')[0]
-    ui.selectPanel('desktop-workbenches')
-    expect(home().props['aria-current']).toBe('page')
-    expect(ui.find(ui.render(), node => node.props?.['data-dsh-workbench-switcher'] === '')[0].props['data-selected']).toBe('true')
-    ui.selectPanel('plugins')
-    expect(home().props['aria-current']).toBeUndefined()
-    expect(ui.find(ui.render(), node => node.props?.['data-dsh-workbench-switcher'] === '')[0].props['data-selected']).toBeUndefined()
-    ui.selectPanel(null)
-    expect(home().props['aria-current']).toBeUndefined()
-    ui.selectPanel('desktop-workbenches')
-    expect(home().props['aria-current']).toBe('page')
-  })
-})
 
 describe('workbench feature default', () => {
   function loadWorkbenches(stored) {

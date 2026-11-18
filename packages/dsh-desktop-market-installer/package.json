@@ -7,7 +7,6 @@
   "main": "./index.js",
   "exports": {
     ".": "./index.js",
-    "./client": "./client.js",
     "./generations/registry": {
       "types": "./generations/registry.d.ts",
       "default": "./generations/registry.mjs"
@@ -37,16 +36,6 @@
       "default": "./windows-hide-console.mjs"
     },
     "./package.json": "./package.json"
-  },
-  "dsh": {
-    "client": {
-      "inject": [
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-ui-settings",
-        "@deepseek-ai/dsh-client-ui-settings-plugins"
-      ],
-      "platform": "web"
-    }
   },
   "license": "MIT",
   "peerDependencies": {

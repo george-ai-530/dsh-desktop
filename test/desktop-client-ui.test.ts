@@ -88,7 +88,6 @@ describe('COWIN Harness Desktop client slot occupants', () => {
     expect(plugin.inject).toEqual(['locale', 'slots', 'remote.session', 'sessions', 'uiWorkspace'])
     expect(registrations.map(({ config }) => config.name)).toEqual([
       'conversation.input.dock',
-      'sidebar.settings.action',
       'sidebar.brand.mark',
       'sidebar.brand.name',
       'conversation.hero.brand.mark',
@@ -98,6 +97,10 @@ describe('COWIN Harness Desktop client slot occupants', () => {
       'sidebar.workspaces.session.menu.item',
       'sidebar.workspaces.session.menu.item'
     ])
+    // 设置旁的两个快捷图标（维修/连接手机）已按产品要求移除：不再占用
+    // sidebar.settings.action，也不注入桌面工具按钮样式。
+    expect(registrations.some(({ config }) => config.name === 'sidebar.settings.action')).toBe(false)
+    expect(appended[0]?.textContent).not.toContain('data-dsh-desktop-utilities')
     // The enterprise footer entry was removed with the COWIN rebrand: no
     // dshdesktop.com links remain in user-visible chrome.
     expect(registrations.some(({ config }) => config.id === 'desktop-enterprise-entry')).toBe(false)

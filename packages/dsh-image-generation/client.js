@@ -2,7 +2,6 @@ window.__ModuleLoader__.load({
   id: 'dsh-image-generation',
   factory: require => {
     const React = require('react')
-    const { IconChevronDownOutlineRegular, Menu } = require('@deepseek-ai/dsh-client-ui-primitives')
     const h = React.createElement
     const NS = 'settings.imageGeneration'
     const zh = {
@@ -64,200 +63,6 @@ window.__ModuleLoader__.load({
       .dshImageFetch{appearance:none;align-self:flex-start;font:inherit;font-size:13px;line-height:1.5;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:5px 14px;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}.dshImageFetch:disabled{opacity:.4;cursor:default}
       .dshImageHostControl{border-bottom:.5px solid var(--dsw-alias-border-l2);padding:12px 0;display:flex;flex-direction:column;gap:8px}.dshImageHostControl label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--dsw-alias-label-primary);cursor:pointer}.dshImageHostControl input{accent-color:var(--dsw-alias-brand-primary)}
     `
-    const emptyDrafts = {
-      bytedance: { baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', model: 'doubao-seedream-4-5-251128', configured: false, validation: null, apiKey: '' },
-      openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-image-1.5', configured: false, validation: null, apiKey: '' },
-    }
-    const emptyCatalogs = {
-      openai: { source: 'builtin', canFetch: true, models: [emptyDrafts.openai.model] },
-      bytedance: { source: 'builtin', canFetch: false, models: [emptyDrafts.bytedance.model] },
-    }
-    function ImageSelect({ name, label, value, options, onChange, disabled }) {
-      const [open, setOpen] = React.useState(false)
-      const trigger = React.useRef(null)
-      const labels = React.useRef(new Map())
-      const id = React.useId()
-      const close = restoreFocus => { setOpen(false); if (restoreFocus) trigger.current?.focus() }
-      React.useEffect(() => { if (disabled) setOpen(false) }, [disabled])
-      React.useEffect(() => {
-        if (!open) return
-        // The shared portaled Menu completes its measurement before focus moves.
-        const frame = requestAnimationFrame(() => (labels.current.get(value) || labels.current.get(options[0]?.id))?.closest('button')?.focus())
-        return () => cancelAnimationFrame(frame)
-      }, [open])
-      const keyDown = event => {
-        if (disabled) return
-        if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); close(true); return }
-        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
-        event.preventDefault(); event.stopPropagation()
-        if (!open) { setOpen(true); return }
-        const buttons = options.map(option => labels.current.get(option.id)?.closest('button')).filter(Boolean)
-        const current = buttons.indexOf(document.activeElement)
-        const index = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (current + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length
-        buttons[index]?.focus()
-      }
-      return h('div', { className: 'dshImageField', onKeyDown: keyDown }, h('span', { id: `${id}-label` }, label),
-        h(Menu, { open: open && !disabled, onClose: () => close(false), selectedId: value, portal: true, dense: true, className: 'dshImageSelect',
-          items: options.map(option => ({ ...option, disabled, label: h('span', { ref: node => { if (node) labels.current.set(option.id, node); else labels.current.delete(option.id) } }, option.label) })),
-          onSelect: selected => { if (!disabled) { close(true); onChange(selected) } },
-          anchor: h('button', { ref: trigger, name, type: 'button', disabled, className: 'dshImageSelectTrigger', 'aria-labelledby': `${id}-label ${id}-value`,
-            'aria-haspopup': 'menu', 'aria-expanded': open && !disabled, onClick: () => setOpen(previous => !previous) },
-            h('span', { id: `${id}-value`, className: 'dshImageSelectValue' }, options.find(option => option.id === value)?.label || value), h(IconChevronDownOutlineRegular)) }))
-    }
-    function ImageCard({ t, callApi }) {
-      const [expanded, setExpanded] = React.useState(false)
-      const [saved, setSaved] = React.useState(null)
-      const [drafts, setDrafts] = React.useState({})
-      const [provider, setProvider] = React.useState('bytedance')
-      const [status, setStatus] = React.useState('')
-      const [error, setError] = React.useState('')
-      const [loading, setLoading] = React.useState(true)
-      const [busy, setBusy] = React.useState(false)
-      const [fetching, setFetching] = React.useState(false)
-      const [catalogs, setCatalogs] = React.useState({})
-      const [customModels, setCustomModels] = React.useState({})
-      const [loadFailed, setLoadFailed] = React.useState(false)
-      const [hostEnabled, setHostEnabled] = React.useState(null)
-      const [hostPending, setHostPending] = React.useState(false)
-      const [hostBusy, setHostBusy] = React.useState(false)
-      const [hostError, setHostError] = React.useState(false)
-      const inFlight = React.useRef(false)
-      const lifetime = React.useRef(null)
-      const lastGood = React.useRef(null)
-      const id = React.useId()
-      const applySettings = result => {
-        lastGood.current = result
-        setSaved(result); setProvider(result.provider)
-        setCatalogs({}); setCustomModels(Object.fromEntries(Object.entries(result.profiles).map(([key, value]) => [key, !result.catalogs[key].models.includes(value.model)])))
-        setDrafts(Object.fromEntries(Object.entries(result.profiles).map(([key, value]) => [key, { ...value, apiKey: '' }])))
-      }
-      const seedDrafts = () => {
-        setSaved(null)
-        setCatalogs({})
-        setCustomModels({})
-        setDrafts(Object.fromEntries(Object.entries(emptyDrafts).map(([key, value]) => [key, { ...value }])))
-      }
-      const load = React.useCallback(async signal => {
-        setLoading(true); setError('')
-        for (let attempt = 0; attempt < 3; attempt++) {
-          try {
-            applySettings(await callApi('settings', {}, signal))
-            if (!signal.aborted) {
-              setLoadFailed(false)
-              setLoading(false)
-            }
-            return
-          } catch {
-            if (signal.aborted) return
-            if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1)))
-          }
-        }
-        if (signal.aborted) return
-        if (lastGood.current) applySettings(lastGood.current)
-        else seedDrafts()
-        setLoadFailed(true)
-        setError('LOAD_FAILED')
-        setLoading(false)
-      }, [callApi])
-      React.useEffect(() => {
-        const controller = new AbortController(); lifetime.current = controller
-        void load(controller.signal)
-        return () => controller.abort()
-      }, [load])
-      React.useEffect(() => {
-        const desktop = globalThis.dshDesktop
-        if (!desktop?.getBuiltInImageGenerationStatus) return
-        let active = true
-        void desktop.getBuiltInImageGenerationStatus().then(result => {
-          if (active) setHostEnabled(result.enabled)
-        }, () => { if (active) setHostError(true) })
-        return () => { active = false }
-      }, [])
-      const toggleHost = async event => {
-        const enabled = event.target.checked
-        setHostBusy(true); setHostError(false)
-        try {
-          const result = await globalThis.dshDesktop.setBuiltInImageGenerationEnabled(enabled)
-          if (!result.ok) throw new Error(result.reason)
-          setHostEnabled(enabled); setHostPending(result.restartRequired === true)
-          if (result.restartRequired === true) window.dispatchEvent(new CustomEvent('dsh-desktop-restart-required', { detail: { source: 'image', restartRequired: true } }))
-        } catch { setHostError(true) }
-        finally { setHostBusy(false) }
-      }
-      const restartHost = async () => {
-        setHostBusy(true); setHostError(false)
-        try {
-          const result = await globalThis.dshDesktop.restartHarness()
-          if (!result.ok) setHostError(true)
-        } catch { setHostError(true) }
-        finally { setHostBusy(false) }
-      }
-      const draft = drafts[provider]
-      const catalog = catalogs[provider] || saved?.catalogs[provider] || emptyCatalogs[provider]
-      const writable = saved?.writable !== false && Boolean(saved) && !loadFailed
-      const edit = (key, value) => {
-        setDrafts(previous => ({ ...previous, [provider]: { ...previous[provider], [key]: value } }))
-        if (key === 'apiKey' || key === 'baseUrl') setCatalogs(previous => ({ ...previous, [provider]: undefined }))
-        setStatus(''); setError('')
-      }
-      const fetchModels = async () => {
-        if (inFlight.current || !saved || loadFailed) return
-        inFlight.current = true; setFetching(true); setError(''); setStatus('')
-        try {
-          const result = await callApi('models', { revision: saved.revision, provider, model: draft.model || undefined, baseUrl: draft.baseUrl, apiKey: draft.apiKey }, lifetime.current.signal)
-          setCatalogs(previous => ({ ...previous, [provider]: result }))
-          setCustomModels(previous => ({ ...previous, [provider]: !result.models.includes(draft.model) }))
-        } catch (error) { if (!lifetime.current.signal.aborted) setError(error.code || 'UNAVAILABLE') }
-        finally { inFlight.current = false; if (!lifetime.current.signal.aborted) setFetching(false) }
-      }
-      const save = async event => {
-        event.preventDefault()
-        if (inFlight.current) return
-        if (!saved || loadFailed) { setError('LOAD_FAILED'); return }
-        const nextKey = (draft.apiKey || '').trim()
-        const reuseKey = Boolean(draft.configured || saved.profiles?.[provider]?.configured)
-        if (!nextKey && !reuseKey) { setError('KEY_REQUIRED'); return }
-        inFlight.current = true; setBusy(true); setError(''); setStatus('')
-        try {
-          const result = await callApi('save', { revision: saved.revision, provider, model: draft.model, baseUrl: draft.baseUrl, apiKey: nextKey }, lifetime.current.signal)
-          applySettings(result)
-          setStatus('saved')
-        } catch (error) { if (!lifetime.current.signal.aborted) setError(error.code || 'UNAVAILABLE') }
-        finally { inFlight.current = false; if (!lifetime.current.signal.aborted) setBusy(false) }
-      }
-      const field = (key, label, type = 'text', placeholder) => h('label', { className: 'dshImageField', key },
-        t(label), h('input', { name: key, type, value: draft[key], placeholder, autoComplete: 'off', spellCheck: false, onChange: event => edit(key, event.target.value) }))
-      return h('section', { className: `dshImageCard${expanded ? ' dshImageCardOpen' : ''}`, 'data-testid': 'image-generation-card' },
-        h('button', { className: 'dshImageHeader', type: 'button', 'aria-expanded': expanded, 'aria-controls': `${id}-body`, onClick: () => setExpanded(value => !value) },
-          h('span', { className: 'dshImageHeading' }, h('span', { className: 'dshImageTitle' }, t('title')), h('span', { className: 'dshImageDescription' }, t('description'))),
-          h(IconChevronDownOutlineRegular, { className: 'dshImageChevron' })),
-        expanded && h('form', { id: `${id}-body`, className: 'dshImageBody', onSubmit: save, 'aria-busy': busy || fetching || loading },
-          hostEnabled !== null && h('div', { className: 'dshImageHostControl' },
-            h('label', null, h('input', { type: 'checkbox', role: 'switch', checked: hostEnabled, disabled: hostBusy, onChange: toggleHost }), t('builtInEnabled')),
-            h('p', { className: 'dshImageHint' }, t('builtInHint')),
-            hostPending && h('button', { className: 'dshImageFetch', type: 'button', disabled: hostBusy, onClick: restartHost }, t('builtInRestart'))),
-          hostError && h('p', { className: 'dshImageStatus dshImageError', role: 'alert' }, t('builtInFailed')),
-          loading ? h('p', { className: 'dshImageHint' }, t('loading')) : draft && h(React.Fragment, null,
-            !loadFailed && h('p', { className: 'dshImageHint' }, t(draft.configured ? 'configuredHint' : 'setupHint')),
-            h('fieldset', { className: 'dshImageFields', disabled: busy || fetching || !writable },
-              h(ImageSelect, { name: 'provider', label: t('provider'), value: provider, disabled: busy || fetching || !writable,
-                options: [{ id: 'bytedance', label: t('bytedance') }, { id: 'openai', label: t('openai') }],
-                onChange: value => { setProvider(value); setStatus(''); setError('') } }),
-              field('apiKey', 'apiKey', 'password', t(draft.configured ? 'savedKey' : 'keyPlaceholder')),
-              h(ImageSelect, { name: 'model', label: t('modelSelect'), value: customModels[provider] || !catalog.models.includes(draft.model) ? '__custom__' : draft.model, disabled: busy || fetching || !writable,
-                options: [...catalog.models.map(model => ({ id: model, label: model })), { id: '__custom__', label: t('customModel') }],
-                onChange: value => { const custom = value === '__custom__'; setCustomModels(previous => ({ ...previous, [provider]: custom })); if (!custom) edit('model', value) } }),
-              (customModels[provider] || !catalog.models.includes(draft.model)) && field('model', 'model'),
-              catalog.canFetch && h('button', { className: 'dshImageFetch', type: 'button', disabled: !(draft.apiKey || '').trim() && !draft.configured, onClick: fetchModels }, t(fetching ? 'fetchingModels' : 'fetchModels')),
-              catalog.source === 'provider' && catalog.models.length === 0 && h('p', { className: 'dshImageHint', role: 'status' }, t('emptyModels')),
-              h('details', { className: 'dshImageAdvanced' }, h('summary', null, t('advanced')), field('baseUrl', 'baseUrl'))),
-            h('div', { className: 'dshImageActions' },
-              h('button', { className: 'dshImageSave', type: 'submit', disabled: busy || fetching || !writable || !(draft.model || '').trim() }, t(busy ? 'saving' : 'save')),
-              error === 'LOAD_FAILED' && h('button', { className: 'dshImageFetch', type: 'button', onClick: () => load(lifetime.current.signal) }, t('reload')),
-              status && h('p', { className: 'dshImageStatus', role: 'status' }, t(status))),
-            saved && !saved.writable && h('p', { className: 'dshImageHint' }, t('readOnly'))),
-          error && h('p', { className: 'dshImageStatus dshImageError', role: 'alert' }, t(Object.hasOwn(en, error) ? error : 'UNAVAILABLE'))))
-    }
     function generatedResult(event) {
       const native = event.type === 'tool/result' && event.surfaceOp === 'append'
       const dispatched = event.type === 'tool/code-dispatch' && event.data.name === 'image_generate'
@@ -322,20 +127,6 @@ window.__ModuleLoader__.load({
     return {
       inject: ['slots', 'locale', 'uiConversation'],
       apply(ctx) {
-        const callApi = async (endpoint, payload, signal) => {
-          const settings = endpoint === 'settings'
-          const response = await fetch(`/api/image-generation.${endpoint}`, {
-            method: settings ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store', signal,
-            ...(settings ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload ?? {}) }),
-          })
-          const text = await response.text()
-          let data
-          try { data = text ? JSON.parse(text) : {} } catch {
-            throw { code: endpoint === 'settings' ? 'LOAD_FAILED' : 'UNAVAILABLE' }
-          }
-          if (!response.ok) throw data.code ? data : { code: endpoint === 'settings' ? 'LOAD_FAILED' : 'UNAVAILABLE' }
-          return data
-        }
         ctx.uiConversation.events.register(imageDefinition)
         ctx.slots.inject('conversation.chat.node', () => ctx.slots.register({
           name: 'conversation.chat.node', key: 'generated-image', locale: NS,
@@ -347,12 +138,6 @@ window.__ModuleLoader__.load({
           document.head.appendChild(style)
           return () => style.remove()
         }, 'image-generation styles')
-        const t = ctx.locale.bind(NS)
-        ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({
-          name: 'settings.plugins.tab', id: 'image-generation', order: -100, locale: NS,
-          label: () => t('title'),
-          inject: () => ({ callApi }),
-        }, ImageCard))
       },
     }
   },

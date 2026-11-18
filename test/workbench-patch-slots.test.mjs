@@ -122,7 +122,8 @@ describe('0.2.2 workbench patch slots', () => {
     const more = rendered.filter(item => item.name === 'sidebar.panellist.actions')
     expect(more).toHaveLength(hasActions && panels.length ? 1 : 0)
     if (hasActions) {
-      expect(markup).toContain('aria-label="Plugins"')
+      // 插件面板行按产品要求从侧边栏过滤；设置页仍可进入插件管理。
+      expect(markup).not.toContain('aria-label="Plugins"')
       expect(markup).toContain('aria-label="Custom panel"')
       expect(markup).not.toContain('aria-label="Schedules"')
       expect(more[0].owner.entries).toEqual([

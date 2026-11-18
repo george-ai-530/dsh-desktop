@@ -81,7 +81,7 @@ it('maintained Desktop clients inject only slots declared by the installed Harne
     }
   })
   const declarations = new Set(clients.flatMap(source => [...source.matchAll(/["']([^"']+)["']\s*:\s*\{\s*kind:\s*["'](?:list|single|keyed|chain)["']/g)].map(match => match[1])))
-  for (const file of ['packages/dsh-desktop-client-ui/client.js', 'packages/dsh-image-generation/client.js', 'packages/dsh-desktop-market-installer/client.js', 'packages/ppt-runtime/adapter/lib/client.js']) {
+  for (const file of ['packages/dsh-desktop-client-ui/client.js', 'packages/dsh-image-generation/client.js', 'packages/ppt-runtime/adapter/lib/client.js']) {
     for (const match of readFileSync(file, 'utf8').matchAll(/slots\.inject\(["']([^"']+)["']/g)) {
       expect(declarations.has(match[1]), `${file}: undeclared slot ${match[1]}`).toBe(true)
     }
@@ -92,4 +92,20 @@ it('uses a single native hero options outlet without private mode actions', () =
   const client = readFileSync('node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js', 'utf8')
   expect(client.match(/renderSlot\("conversation\.hero\.options", \{\}\)/g)).toHaveLength(1)
   expect(client).not.toContain('conversation.hero.modeActions')
+})
+
+it('trims the conversation header and hero chrome to the Desktop surface', () => {
+  const client = readFileSync('node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js', 'utf8')
+  // 预览版徽标不再渲染；品牌标题 slot 保留。
+  expect(client).not.toContain('t("hero.preview")')
+  expect(client).toContain('renderSlot("conversation.hero.brand.title", {}, { fallback: t("hero.headline") })')
+  // 轨迹视图不再出现在 View 行；只剩对话时仍渲染 tab 行。
+  expect(client).toContain('if (entry.options.id === "trajectory") continue;')
+  expect(client).not.toContain('developerTools.enabled.getSnapshot() && entry.options.id === "trajectory"')
+  expect(client).toContain('const showTabs = !hideChrome && tabs.length > 0;')
+  // 会话头部不再有固定的「更多」导出菜单；复制提示与 export 命令自动下载保留。
+  const sessionLog = readFileSync('node_modules/@deepseek-ai/dsh-session-log-export/lib/client.js', 'utf8')
+  expect(sessionLog).not.toContain('"conversation.session.header.utilities"')
+  expect(sessionLog).toContain('session-log-download.copy-toast')
+  expect(sessionLog).toContain('commandName === "export"')
 })

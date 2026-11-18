@@ -73,8 +73,8 @@ export function externalUrlToOpen(url: string): string | undefined {
  * Restart starts the current Host again. Safe Mode relaunches into the core profile when that action is supplied.
  * The next item reveals harness.log. It stays after Restart when Safe Mode is already active.
  * Phone pairing stays out of this menu.
- * Windows keeps a hidden copy of this command set so accelerators survive; the visible
- * caption is the in-page 应用 / 编辑 menu.
+ * Windows no longer mirrors this command set: its hidden application menu
+ * carries only Restart and Quit.
  */
 export function buildDarwinDesktopMenu(options: {
   locale: string
@@ -144,16 +144,12 @@ export function buildDarwinDesktopMenu(options: {
 
 /**
  * Hidden Windows application menu. The bar stays invisible; roles and the
- * Harness accelerators remain registered. The page caption draws 应用 / 编辑
- * and does not register those accelerators again.
+ * remaining Harness accelerator (Restart) stay registered. The visible caption
+ * menu is the trimmed 应用 dropdown; 编辑/视图/窗口 keep their roles and labels.
  */
 export function buildWindowsApplicationMenu(options: {
   locale: string
-  connectPhone: () => void
   restart: () => void
-  restartSafeMode?: () => void
-  showHarnessLog: () => void
-  checkForUpdates: () => void
   quit: () => void
 }): DesktopMenuItem[] {
   const text = desktopMenuMessages(options.locale)
@@ -163,24 +159,10 @@ export function buildWindowsApplicationMenu(options: {
       label: text.application,
       submenu: [
         {
-          label: text.phone,
-          accelerator: 'CmdOrCtrl+Shift+M',
-          click: options.connectPhone
-        },
-        {
           label: restartMenuLabel(options.locale),
           accelerator: 'CmdOrCtrl+Shift+R',
           click: options.restart
         },
-        ...(options.restartSafeMode === undefined
-          ? []
-          : [{ label: safeModeMenuLabel(options.locale), click: options.restartSafeMode }]),
-        {
-          label: text.log,
-          click: options.showHarnessLog
-        },
-        { type: 'separator' },
-        { label: updateMenuLabel(options.locale), accelerator: 'CmdOrCtrl+U', click: options.checkForUpdates },
         { type: 'separator' },
         { role: 'quit', label: text.exit, click: options.quit }
       ]
@@ -201,7 +183,6 @@ export function buildWindowsApplicationMenu(options: {
       label: text.view,
       submenu: [
         { role: 'reload', label: text.reload },
-        { role: 'toggleDevTools', label: text.devtools },
         { type: 'separator' },
         { role: 'resetZoom', label: text.actualSize },
         { role: 'zoomIn', label: text.zoomIn },

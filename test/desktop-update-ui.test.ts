@@ -51,7 +51,7 @@ async function mount(initial: Promise<UpdateStatus>) {
   return {
     host, shadow, aboutShadow,
     emit: (status: UpdateStatus) => ipc.handlers.get('updates:status-changed')?.({}, status),
-    showAbout: () => ipc.handlers.get('desktop:show-about')?.({}, { desktopVersion: '1.0.0', harnessVersion: '2.0.0', locale: 'zh' })
+    showAbout: () => ipc.handlers.get('desktop:show-about')?.({}, { locale: 'zh' })
   }
 }
 afterEach(() => {
@@ -72,18 +72,21 @@ describe('desktop update presentation at the IPC boundary', () => {
     ui.showAbout()
     ipc.handlers.get('desktop:ui-locale')?.({}, 'fr')
     expect(ui.aboutShadow.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('À propos de COWIN Harness Desktop')
-    expect(ui.aboutShadow.querySelector('.version-switch')?.textContent).toBe('Changer de version')
-    expect(ui.aboutShadow.querySelector('.tooltip')?.textContent).toBe('Harness est mis à jour avec COWIN Harness Desktop.')
+    // 版本切换入口已移除；版本行固定为产品展示版本。
+    expect(ui.aboutShadow.querySelector('.version-switch')).toBeNull()
+    expect(ui.aboutShadow.querySelector('.tooltip')).toBeNull()
+    expect(ui.aboutShadow.querySelector('.about-line')?.textContent).toBe('0.1.0')
   })
-  it('translates a missing Harness version at render time when About changes language', async () => {
+  it('keeps the fixed product version line when About changes language without version fields', async () => {
     const ui = await mount(Promise.resolve(status('idle', { manual: false })))
-    ipc.handlers.get('desktop:show-about')?.({}, { desktopVersion: '1.0.0', locale: 'en' })
-    expect(ui.aboutShadow.querySelector('.about-line')?.textContent).toContain(`Harness ${updateText('en', 'unknown')}`)
+    ipc.handlers.get('desktop:show-about')?.({}, { locale: 'en' })
+    expect(ui.aboutShadow.querySelector('.about-line')?.textContent).toBe('0.1.0')
     for (const locale of ['ja', 'zh', 'fr'] as const) {
       ipc.handlers.get('desktop:ui-locale')?.({}, locale)
-      expect(ui.aboutShadow.querySelector('.about-line')?.textContent).toContain(`Harness ${updateText(locale, 'unknown')}`)
-      expect(ui.aboutShadow.querySelector('.about-line')?.textContent).not.toContain('Harness Unknown')
-      expect(ui.aboutShadow.querySelector('.about-line')?.textContent).not.toContain('undefined')
+      expect(ui.aboutShadow.querySelector('.about-line')?.textContent).toBe('0.1.0')
+      expect(ui.aboutShadow.textContent).not.toContain('Harness 2')
+      expect(ui.aboutShadow.textContent).not.toContain('v1.0.0')
+      expect(ui.aboutShadow.textContent).not.toContain('undefined')
     }
   })
 
@@ -304,9 +307,7 @@ describe('desktop update presentation at the IPC boundary', () => {
     const card = required(ui.aboutShadow.querySelector<HTMLElement>('.about-card'))
     expect(card.tabIndex).toBe(-1)
     expect(ui.aboutShadow.activeElement).toBe(card)
-    const switcher = required(card.querySelector<HTMLButtonElement>('.version-switch'))
     const confirm = required(card.querySelector<HTMLButtonElement>('.confirm'))
-    expect(switcher.tabIndex).toBe(0)
     expect(confirm.tabIndex).toBe(0)
     confirm.focus()
     expect(ui.aboutShadow.activeElement).toBe(confirm)
@@ -320,7 +321,7 @@ describe('desktop update presentation at the IPC boundary', () => {
     ui.showAbout()
     const aboutClose = required(ui.aboutShadow.querySelector<HTMLButtonElement>('.dialog-close'))
     expect(aboutClose.getAttribute('aria-label')).toBe('关闭')
-    expect(ui.aboutShadow.querySelector('.version-switch')?.textContent).toContain('版本切换')
+    expect(ui.aboutShadow.querySelector('.about-line')?.textContent).toBe('0.1.0')
     aboutClose.click()
     expect(ui.aboutShadow.querySelector('.about-card')).toBeNull()
 
@@ -355,9 +356,10 @@ describe('desktop update presentation at the IPC boundary', () => {
     const ui = await mount(Promise.resolve(status('idle', { manual: false })))
     ui.showAbout()
     ipc.handlers.get('desktop:ui-locale')?.({}, 'en')
-    expect(ui.aboutShadow.querySelector('.version-switch')?.textContent).toContain('Switch version')
     expect(ui.aboutShadow.querySelector('.dialog-close')?.getAttribute('aria-label')).toBe('Close')
+    expect(ui.aboutShadow.querySelector('.about-line')?.textContent).toBe('0.1.0')
     ipc.handlers.get('desktop:ui-locale')?.({}, 'zh')
-    expect(ui.aboutShadow.querySelector('.version-switch')?.textContent).toContain('版本切换')
+    expect(ui.aboutShadow.querySelector('.dialog-close')?.getAttribute('aria-label')).toBe('关闭')
+    expect(ui.aboutShadow.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('关于 COWIN Harness Desktop')
   })
 })

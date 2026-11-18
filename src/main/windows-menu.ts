@@ -35,8 +35,9 @@ export function parseWindowsMenuRequest(name: unknown, x: unknown, y: unknown): 
 }
 
 /**
- * Build one caption menu. The application menu carries every Desktop command
- * the former dropdown offered; the edit menu mirrors upstream.
+ * Build one caption menu. The application menu carries the trimmed Desktop
+ * command set (Restart, View group, About, Quit); the edit menu mirrors
+ * upstream.
  * @param zoomFactor - current page zoom, shown on the reset item.
  */
 export function windowsMenuTemplate(
@@ -80,16 +81,12 @@ export function windowsMenuTemplate(
   }
 
   return [
-    command('connect-phone', text.phone, 'Ctrl+Shift+M'),
     command('restart-harness', text.restart, 'Ctrl+Shift+R'),
-    command('safe-mode', text.safeMode),
-    command('show-harness-log', text.log),
     { type: 'separator' },
     {
       label: text.view,
       submenu: [
         command('reload', text.reload, 'Ctrl+R'),
-        command('toggle-devtools', text.devtools, 'Ctrl+Shift+I'),
         { type: 'separator' },
         command('zoom-in', text.zoomIn, 'Ctrl+='),
         command('zoom-out', text.zoomOut, 'Ctrl+-'),
@@ -103,7 +100,6 @@ export function windowsMenuTemplate(
       ]
     },
     { type: 'separator' },
-    command('check-for-updates', text.update, 'Ctrl+U'),
     command('about', text.about),
     { type: 'separator' },
     command('quit', text.exit)

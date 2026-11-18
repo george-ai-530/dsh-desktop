@@ -18,7 +18,8 @@ describe('daily update and About translations', () => {
     expect(aboutDetail('1.0.0', '0.2.2', locale)).toContain('0.2.2')
     expect(aboutDetail('1.0.0', undefined, locale)).toContain(updateText(locale, 'unknown'))
     expect(presentedUpdateMessage('Desktop update service is unavailable', locale)).toBe(updateText(locale, 'serviceUnavailable'))
-    expect(updateText(locale, 'downgradeConfirm', { version: '1', current: '2' })).not.toMatch(/\{\w+\}/)
+    // 关于弹窗的版本切换入口已移除：确认相关文案键不再存在。
+    expect(() => updateText(locale, 'switchVersion' as never)).toThrow()
   })
   it('uses the approved English release prose for all non-Chinese UI locales', () => {
     const notes = JSON.stringify({ schema: 'dsh-popup-notes-v1', zh: '中文说明', en: 'English notes' })

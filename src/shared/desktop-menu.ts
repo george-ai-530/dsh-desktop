@@ -9,11 +9,7 @@ export function usesDesktopCaption(platform: string): boolean {
 }
 
 export const desktopMenuCommands = [
-  'connect-phone',
   'restart-harness',
-  'safe-mode',
-  'show-harness-log',
-  'check-for-updates',
   'undo',
   'redo',
   'cut',
@@ -21,7 +17,6 @@ export const desktopMenuCommands = [
   'paste',
   'select-all',
   'reload',
-  'toggle-devtools',
   'zoom-reset',
   'zoom-in',
   'zoom-out',

@@ -110,35 +110,38 @@ describe('application menu', () => {
     expect(shortcutFileMenuLabels('en-US').closePage).toBe('Close Page or Window')
   })
 
-  it('keeps Windows accelerators on a hidden application menu', () => {
+  it('keeps only Restart and Quit on the hidden Windows application menu', () => {
     const calls: string[] = []
     const menu = buildWindowsApplicationMenu({
       locale: 'zh-CN',
-      connectPhone: () => { calls.push('phone') },
       restart: () => { calls.push('restart') },
-      restartSafeMode: () => { calls.push('safe') },
-      showHarnessLog: () => { calls.push('log') },
-      checkForUpdates: () => { calls.push('update') },
       quit: () => { calls.push('quit') }
     })
-    const labels = menu.flatMap(item => [item.label, ...(item.submenu ?? []).map(child => child.label)])
-    expect(labels).toEqual(expect.arrayContaining(['应用', '连接手机…', '重启', '显示 Harness 日志', '编辑', '视图', '窗口']))
-    const accelerators = menu.flatMap(item => (item.submenu ?? []).map(child => child.accelerator))
-    expect(accelerators).toEqual(expect.arrayContaining(['CmdOrCtrl+Shift+M', 'CmdOrCtrl+Shift+R', 'CmdOrCtrl+U']))
+    const application = menu[0]?.submenu ?? []
+    expect(menu[0]?.label).toBe('应用')
+    expect(application[0]).toMatchObject({ label: '重启', accelerator: 'CmdOrCtrl+Shift+R' })
+    expect(application[application.length - 1]).toMatchObject({ role: 'quit', label: '退出' })
+    // 连接手机、安全模式、Harness 日志和检查更新已从隐藏菜单移除。
+    const labels = application.map(child => child.label)
+    expect(labels).not.toContain('连接手机…')
+    expect(labels).not.toContain('以安全模式重启…')
+    expect(labels).not.toContain('显示 Harness 日志')
+    expect(labels).not.toContain('检查更新…')
+    expect(labels).not.toContain(safeModeMenuLabel('zh-CN'))
+    const accelerators = application.map(child => child.accelerator)
+    expect(accelerators).toEqual(expect.arrayContaining(['CmdOrCtrl+Shift+R']))
+    expect(accelerators).not.toContain('CmdOrCtrl+Shift+M')
+    expect(accelerators).not.toContain('CmdOrCtrl+U')
+    // 编辑/视图/窗口的 role 集合保持不变，开发者工具不再注册。
     const roles = menu.flatMap(item => (item.submenu ?? []).map(child => child.role))
     expect(roles).toEqual(expect.arrayContaining(['undo', 'copy', 'reload', 'zoomIn', 'togglefullscreen', 'quit']))
-    menu[0]?.submenu?.[0]?.click?.()
-    expect(calls).toEqual(['phone'])
-    const withoutSafeMode = buildWindowsApplicationMenu({
-      locale: 'en',
-      connectPhone: () => {},
-      restart: () => {},
-      showHarnessLog: () => {},
-      checkForUpdates: () => {},
-      quit: () => {}
-    })
-    expect((withoutSafeMode[0]?.submenu ?? []).some(item => item.label === safeModeMenuLabel('en'))).toBe(false)
-    expect(withoutSafeMode[0]?.label).toBe('Application')
+    expect(roles).not.toContain('toggleDevTools')
+    menu.map(item => item.label).forEach(label => expect(['应用', '编辑', '视图', '窗口']).toContain(label))
+    application[0]?.click?.()
+    expect(calls).toEqual(['restart'])
+    const english = buildWindowsApplicationMenu({ locale: 'en', restart: () => {}, quit: () => {} })
+    expect(english[0]?.label).toBe('Application')
+    expect((english[0]?.submenu ?? []).some(item => item.label === safeModeMenuLabel('en'))).toBe(false)
   })
 
   it('installs the menu from the new shell', async () => {

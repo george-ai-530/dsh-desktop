@@ -22,6 +22,37 @@
 - id: ui-settings-account
   disabled: true
 
+# The customization plugin drives the sidebar「更多」menu and the conversation
+# tab-row「…」menu (pin/unpin and reorder entries). Both entry points are
+# removed from the product surface, so the plugin stays unloaded; panels and
+# views keep their stock order. The entry-customization settings section it
+# registers goes away with it.
+- id: entry-customization
+  disabled: true
+
+# Session Log 上传开关随产品精简移除；其宿主插件上游默认打开，需显式关闭。
+- id: ui-settings-session-log
+  disabled: true
+- id: session-log-deepseek
+  config:
+    enabled: false
+
+# 设置导航精简：内置插件区与寄宿其中的 companion 设置页一并停用；
+# 插件市场导航由 dsh-desktop-market-installer 的 settings.section 占位提供，
+# 该包的注入已同步删除。
+- id: ui-settings-plugins
+  disabled: true
+- id: ui-settings-plugin-inventory
+  disabled: true
+- id: ui-settings-shell
+  disabled: true
+- id: ui-settings-agent-loop
+  disabled: true
+- id: ui-settings-subagent
+  disabled: true
+- id: ui-settings-web-search
+  disabled: true
+
 # Desktop keeps the existing web Profile; upstream only enables this for a
 # Profile named desktop. Enable the shipped browser in the Desktop overlay.
 - id: ui-sidebar-browser

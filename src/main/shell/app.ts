@@ -395,11 +395,9 @@ async function presentAbout(window: BrowserWindow, locale: HarnessLocale): Promi
   const desktopVersion = app.getVersion()
   const harnessVersion = bundledHarnessVersion(app.getAppPath())
   if (aboutUsesPage(window.webContents.getURL(), SCHEME)) {
-    window.webContents.send('desktop:show-about', {
-      desktopVersion,
-      harnessVersion,
-      locale
-    })
+    // The in-page dialog shows the fixed product version; the payload no
+    // longer carries install version numbers.
+    window.webContents.send('desktop:show-about', { locale })
     return
   }
   const result = await dialog.showMessageBox(window, {
@@ -552,13 +550,7 @@ async function main(): Promise<void> {
     if (usesDesktopCaption(process.platform)) {
       const template = buildWindowsApplicationMenu({
         locale: menuLocale,
-        connectPhone: () => { void openMobilePairing().catch((error: unknown) => { console.error(error) }) },
         restart: () => { void restartDesktop() },
-        ...(shouldStartInSafeMode(process.argv) || process.env.DSH_DESKTOP_SAFE_MODE === '1'
-          ? {}
-          : { restartSafeMode: () => { restartInSafeMode() } }),
-        showHarnessLog: () => { shell.showItemInFolder(join(app.getPath('logs'), 'harness.log')) },
-        checkForUpdates: () => { void checkForUpdates(true).catch((error: unknown) => { console.error(error) }) },
         quit: () => { app.quit() }
       })
       Menu.setApplicationMenu(Menu.buildFromTemplate(template as MenuItemConstructorOptions[]))
@@ -1256,26 +1248,11 @@ async function main(): Promise<void> {
   async function runWindowsCaptionCommand(owner: BrowserWindow, command: DesktopMenuCommand): Promise<void> {
     const contents = owner.webContents
     switch (command) {
-      case 'connect-phone':
-        await openMobilePairing()
-        return
       case 'restart-harness':
         await restartDesktop()
         return
-      case 'safe-mode':
-        restartInSafeMode()
-        return
-      case 'show-harness-log':
-        shell.showItemInFolder(join(app.getPath('logs'), 'harness.log'))
-        return
-      case 'check-for-updates':
-        await checkForUpdates(true)
-        return
       case 'reload':
         contents.reload()
-        return
-      case 'toggle-devtools':
-        contents.toggleDevTools()
         return
       case 'zoom-reset':
         contents.setZoomLevel(0)

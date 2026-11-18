@@ -40,11 +40,29 @@ describe('Windows caption menus', () => {
     expect(isDesktopMenuCommand({ command: 'quit' })).toBe(false)
   })
 
-  it('keeps every Desktop command in the application menu, including the View group', () => {
+  it('keeps only the trimmed command set in the application menu, including the View group', () => {
     const { run, actions } = record()
     clickAll(windowsMenuTemplate('application', 'zh', 1, actions))
     const editing = new Set<DesktopMenuCommand>(['undo', 'redo', 'cut', 'copy', 'paste', 'select-all'])
     expect(new Set(run)).toEqual(new Set(desktopMenuCommands.filter((command) => !editing.has(command))))
+    // 应用菜单精简：连接手机、安全模式、Harness 日志和检查更新不再出现。
+    const chinese = labels(windowsMenuTemplate('application', 'zh', 1, actions))
+    const english = labels(windowsMenuTemplate('application', 'en', 1, actions))
+    expect(chinese).not.toContain('连接手机…')
+    expect(chinese).not.toContain('以安全模式重启…')
+    expect(chinese).not.toContain('显示 Harness 日志')
+    expect(chinese).not.toContain('检查更新…')
+    expect(english).not.toContain('Connect Phone…')
+    expect(english).not.toContain('Restart as Safe Mode…')
+    expect(english).not.toContain('Show Harness Log')
+    expect(english).not.toContain('Check for Updates…')
+    // 视图子菜单精简：开发者工具不再出现。
+    const submenuOf = (items: MenuItemConstructorOptions[]): MenuItemConstructorOptions[] =>
+      items.find(item => Array.isArray(item.submenu))?.submenu as MenuItemConstructorOptions[] | undefined ?? []
+    const chineseView = labels(submenuOf(windowsMenuTemplate('application', 'zh', 1, actions)))
+    const englishView = labels(submenuOf(windowsMenuTemplate('application', 'en', 1, actions)))
+    expect(chineseView).not.toContain('开发者工具')
+    expect(englishView).not.toContain('Developer Tools')
   })
 
   it('sends editing shortcuts as key events so editor-owned history receives them', () => {

@@ -3,15 +3,12 @@ import { updateText } from '../shared/desktop-update-messages'
 import { renderUpdateNotes } from './update-notes-view'
 import { popupReleaseNotes } from '../shared/update-release-notes'
 import { ipcRenderer } from 'electron'
-import type { AvailableRelease, UpdateStatus } from '../shared/contracts'
+import type { UpdateStatus } from '../shared/contracts'
 import {
   isUpdateDismissed,
   isNewManualPresentation,
   shouldShowUpdate,
   updateHeadline,
-  comparePreloadVersions,
-  rollbackReleases,
-  rollbackEmptyMessage,
   presentedUpdateMessage,
   UPDATE_ACTION_FAILED,
   type UpdateLocale
@@ -29,16 +26,11 @@ let dismissedPresentationId: number | undefined
 let dismissedTransientPhase: UpdateStatus['phase'] | null = null
 let installing = false
 let accepting = false
-let versionPickerOpen = false
-let versionPickerLoading = false
-let versionPickerError = false
-let versionPickerList: AvailableRelease[] | null = null
-let installingVersion: string | null = null
 
 const ABOUT_ROOT_ID = 'dsh-desktop-about-root'
+// 产品展示版本：关于弹窗固定显示，与安装包/更新版本号解耦。
+const ABOUT_VERSION = '0.1.0'
 interface AboutInfo {
-  desktopVersion: string
-  harnessVersion?: string
   locale: UpdateLocale
 }
 let aboutHost: HTMLElement | null = null
@@ -118,9 +110,6 @@ function applyStatus(status: UpdateStatus, delivery: 'event' | 'snapshot' = 'eve
     host.dataset.updateManual = String(status.manual)
   }
   if (status.phase === 'error') installing = false
-  if (['error', 'downloading', 'downloaded', 'up-to-date'].includes(status.phase)) {
-    installingVersion = null
-  }
   if (status.phase !== 'available') accepting = false
   render()
 }
@@ -300,26 +289,6 @@ function skipButton(status: UpdateStatus): HTMLButtonElement {
   return skip
 }
 
-function loadVersionList(onDone?: () => void): void {
-  versionPickerLoading = true
-  versionPickerError = false
-  if (onDone) onDone()
-  void ipcRenderer
-    .invoke('updates:list-versions')
-    .then((releases: AvailableRelease[]) => {
-      versionPickerList = Array.isArray(releases) ? releases : []
-    })
-    .catch((error: unknown) => {
-      console.error('[updater] unable to list versions', error)
-      versionPickerError = true
-      versionPickerList = null
-    })
-    .finally(() => {
-      versionPickerLoading = false
-      if (onDone) onDone()
-    })
-}
-
 function mountAbout(): void {
   if (document.getElementById(ABOUT_ROOT_ID)) return
 
@@ -358,7 +327,6 @@ function renderAbout(): void {
   aboutHost.style.display = 'flex'
   const info = aboutInfo
   const a = (key: Parameters<typeof updateText>[1]) => updateText(info.locale, key)
-  const currentVer = info.desktopVersion
 
   let overlay = aboutShadow.querySelector('.about-overlay') as HTMLElement | null
   if (!overlay) {
@@ -366,7 +334,6 @@ function renderAbout(): void {
     overlay.addEventListener('click', (event) => {
       if (event.target === overlay) {
         aboutOpen = false
-        versionPickerOpen = false
         renderAbout()
       }
     })
@@ -382,119 +349,22 @@ function renderAbout(): void {
   const header = element('div', 'about-header')
   header.appendChild(appIcon())
   header.appendChild(closeButton(a('close'), closeAbout))
-  const switcher = element('div', 'switcher')
-  const selectVersionBtn = button(a('switchVersion'), 'version-switch')
-  const switchIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  switchIcon.setAttribute('viewBox', '0 0 24 24')
-  switchIcon.setAttribute('aria-hidden', 'true')
-  switchIcon.setAttribute('focusable', 'false')
-  switchIcon.classList.add('version-switch-icon')
-  const switchArrows = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-  switchArrows.setAttribute('d', 'M3 8h18l-6-6M21 16H3l6 6')
-  switchIcon.appendChild(switchArrows)
-  selectVersionBtn.prepend(switchIcon)
-  selectVersionBtn.setAttribute('aria-expanded', String(versionPickerOpen))
-  selectVersionBtn.setAttribute('aria-controls', 'desktop-version-list')
-  selectVersionBtn.addEventListener('click', () => {
-    versionPickerOpen = !versionPickerOpen
-    if (versionPickerOpen && versionPickerList === null && !versionPickerLoading) loadVersionList(renderAbout)
-    renderAbout()
-    aboutShadow?.querySelector<HTMLButtonElement>('.version-switch')?.focus()
-  })
-  switcher.appendChild(selectVersionBtn)
-  header.appendChild(switcher)
   card.appendChild(header)
   const title = element('h2', 'about-title')
   title.textContent = 'COWIN Harness Desktop'
   card.appendChild(title)
   const version = element('p', 'about-line')
-  version.textContent = `v${info.desktopVersion} (${a('bundled')} Harness ${info.harnessVersion ?? a('unknown')}`
-  const hint = button('', 'info')
-  hint.innerHTML = '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="currentColor"/><path d="M10 9v5M10 6v1" stroke="currentColor" stroke-width="1.5"/></svg>'
-  hint.setAttribute('aria-label', a('harnessHint'))
-  const tooltip = element('span', 'tooltip')
-  tooltip.id = 'harness-version-hint'
-  tooltip.setAttribute('role', 'tooltip')
-  tooltip.textContent = a('harnessUpdated')
-  hint.setAttribute('aria-describedby', tooltip.id)
-  hint.appendChild(tooltip)
-  version.append(hint, document.createTextNode(')'))
+  version.textContent = ABOUT_VERSION
   card.appendChild(version)
   const confirm = button(a('ok'), 'primary confirm')
   confirm.addEventListener('click', closeAbout)
   card.appendChild(confirm)
-  // Version picker inside About dialog
-  if (versionPickerOpen) {
-    const pickerContainer = element('div', 'version-picker-container')
-    pickerContainer.id = 'desktop-version-list'
-    if (versionPickerLoading) {
-      const line = element('p', 'version-status-text')
-      line.textContent = a('loadingVersions')
-      pickerContainer.appendChild(line)
-    } else if (versionPickerError) {
-      const line = element('p', 'version-status-text')
-      line.textContent = a('versionsError')
-      pickerContainer.appendChild(line)
-    } else {
-      const older = rollbackReleases(versionPickerList || [], currentVer)
-      if (older.length > 0) {
-        appendAboutVersionGroup(pickerContainer, a('rollback'), older, currentVer, info.locale)
-      } else {
-        const line = element('p', 'version-status-text')
-        line.textContent = rollbackEmptyMessage(info.locale)
-        pickerContainer.appendChild(line)
-      }
-    }
-    switcher.appendChild(pickerContainer)
-  }
 
   const firstOpen = !overlay.childElementCount
   overlay.replaceChildren(card)
   // Initial focus enters the panel without drawing a button focus ring; Tab
   // still reaches its controls and preserves their keyboard-visible outline.
   if (firstOpen) card.focus()
-}
-
-function appendAboutVersionGroup(
-  container: HTMLElement,
-  heading: string,
-  releases: AvailableRelease[],
-  currentVersion: string,
-  selectedLocale: UpdateLocale
-): void {
-  if (releases.length === 0) return
-  const group = element('div', 'version-group')
-  const label = element('p', 'version-group-title')
-  label.textContent = heading
-  group.appendChild(label)
-
-  const buttonsRow = element('div', 'version-buttons')
-  for (const release of releases.slice(0, 12)) {
-    const pick = button(`v${release.version}`, 'version-tag-btn')
-    pick.disabled = installingVersion !== null
-    pick.addEventListener('click', () => {
-      selectVersionFromAbout(release, currentVersion, selectedLocale)
-    })
-    buttonsRow.appendChild(pick)
-  }
-  group.appendChild(buttonsRow)
-  container.appendChild(group)
-}
-
-function selectVersionFromAbout(release: AvailableRelease, currentVersion: string, selectedLocale: UpdateLocale): void {
-  if (comparePreloadVersions(release.version, currentVersion) >= 0) return
-  const message = updateText(selectedLocale, 'downgradeConfirm', { version: release.version, current: currentVersion })
-  if (!window.confirm(message)) return
-
-  installingVersion = release.version
-  aboutOpen = false
-  versionPickerOpen = false
-  renderAbout()
-  void ipcRenderer.invoke('updates:install-version', release.version).catch((error: unknown) => {
-    installingVersion = null
-    showActionError(error)
-    console.error('[updater] unable to install version', error)
-  })
 }
 
 function dismissCurrent(): void {
@@ -570,11 +440,11 @@ const styles = `
   .release-notes code { font-size:12px; padding:1px 4px; border-radius:4px; background:var(--dsw-alias-interactive-bg-hover,rgba(128,128,128,.12)); }
   .release-notes > :first-child { margin-top:0; }
   .release-notes > :last-child { margin-bottom:0; }
-  .card,.release-notes,.version-picker-container { scrollbar-width:thin; scrollbar-color:var(--dsw-alias-border-l2,#b4b7be) transparent; }
-  :is(.card,.release-notes,.version-picker-container)::-webkit-scrollbar { width:6px; height:6px; }
-  :is(.card,.release-notes,.version-picker-container)::-webkit-scrollbar-track { background:transparent; }
-  :is(.card,.release-notes,.version-picker-container)::-webkit-scrollbar-thumb { background:var(--dsw-alias-border-l2,#b4b7be); border-radius:999px; }
-  :is(.card,.release-notes,.version-picker-container)::-webkit-scrollbar-thumb:hover { background:var(--dsw-alias-label-secondary,#888d96); }
+  .card,.release-notes { scrollbar-width:thin; scrollbar-color:var(--dsw-alias-border-l2,#b4b7be) transparent; }
+  :is(.card,.release-notes)::-webkit-scrollbar { width:6px; height:6px; }
+  :is(.card,.release-notes)::-webkit-scrollbar-track { background:transparent; }
+  :is(.card,.release-notes)::-webkit-scrollbar-thumb { background:var(--dsw-alias-border-l2,#b4b7be); border-radius:999px; }
+  :is(.card,.release-notes)::-webkit-scrollbar-thumb:hover { background:var(--dsw-alias-label-secondary,#888d96); }
   /* Hide only the visual scrollbar; preserve wheel, touch and keyboard scrolling. */
   .release-notes { scrollbar-width:none; }
   .release-notes::-webkit-scrollbar { display:none; width:0; height:0; }
@@ -586,11 +456,9 @@ const styles = `
   button:disabled { cursor:default; opacity:.55; }
   .primary { background:var(--dsw-alias-button-primary-fill,#000); color:var(--dsw-alias-label-primary-inverted,#fff); font-size:14px; padding:8px 16px; }
   .primary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover,#34363b); }
-  .secondary,.details,.version-switch { color:var(--dsw-alias-label-secondary,#666b73); background:transparent; padding:4px 8px; font-size:13px; }
+  .secondary,.details { color:var(--dsw-alias-label-secondary,#666b73); background:transparent; padding:4px 8px; font-size:13px; }
   .details { color:var(--dsw-alias-label-primary,#202124); padding-left:0; text-decoration:underline; text-underline-offset:3px; }
-  .version-switch { display:inline-flex; align-items:center; gap:8px; }
-  .version-switch-icon { width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-  .secondary:hover,.details:hover,.version-switch:hover { background:var(--dsw-alias-interactive-bg-hover,#f0f2f5); }
+  .secondary:hover,.details:hover { background:var(--dsw-alias-interactive-bg-hover,#f0f2f5); }
   .actions { display:flex; gap:8px; margin-top:16px; }
   .centered .primary,.confirm { width:100%; }
   .confirm { margin-top:24px; }
@@ -606,27 +474,17 @@ const styles = `
   .dialog-close:hover:not(:disabled) { background:var(--dsw-alias-interactive-bg-hover,#f0f2f5); }
   .dialog-close:focus, .dialog-close:focus-visible { outline:none; }
   .about-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding-right:36px; }
-  .about-line { display:flex; align-items:center; flex-wrap:wrap; gap:3px; }
-  .info { position:relative; background:transparent; padding:0 0 0 3px; margin-right:-3px; color:inherit; min-height:24px; }
-  .tooltip { display:none; position:absolute; right:0; bottom:100%; width:220px; padding:8px 12px; font-size:12px; line-height:18px; background:var(--dsw-alias-bg-layer-2,#f0f2f5); color:var(--dsw-alias-label-primary,#202124); border-radius:8px; box-shadow:0 3px 12px rgba(0,0,0,.12); }
-  .info:hover .tooltip,.info:focus .tooltip { display:block; }
-  .switcher { position:relative; }
-  .version-picker-container { position:absolute; right:0; top:100%; width:190px; max-height:min(180px,calc(100vh - 130px)); overflow:auto; padding:8px; background:var(--dsw-alias-bg-layer-1,#fff); color:var(--dsw-alias-label-primary,#202124); border:1px solid var(--dsw-alias-border-l2,#e5e7eb); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.12); z-index:1; }
-  .version-group-title,.version-status-text { margin:6px; font-size:12px; line-height:18px; color:var(--dsw-alias-label-secondary,#666b73); }
-  .version-tag-btn { display:block; width:100%; padding:6px 8px; text-align:left; background:transparent; color:inherit; font-size:13px; }
-  .version-tag-btn:hover { background:var(--dsw-alias-interactive-bg-hover,#f0f2f5); }
   .progress { height:5px; background:var(--dsw-alias-bg-layer-2,#e5e7eb); border-radius:4px; overflow:hidden; margin:12px 0; }
   .progressValue { height:100%; background:var(--dsw-alias-button-primary-fill,#000); }
   .spinner { position:absolute; inset:16px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin .75s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  :host([data-dsh-theme="dark"]) :is(.card,.about-card,.version-picker-container) { background:var(--dsw-alias-bg-layer-1,#1f2023); color:var(--dsw-alias-label-primary,#f3f4f6); border-color:var(--dsw-alias-border-l2,#41434a); }
-  :host([data-dsh-theme="dark"]) :is(.description,.about-line,.release-notes,.notes-label,.current-version,.secondary,.version-switch,.version-group-title,.version-status-text) { color:var(--dsw-alias-label-secondary,#a9adb5); }
-  :host([data-dsh-theme="dark"]) .tooltip { background:var(--dsw-alias-bg-layer-2,#34363b); color:var(--dsw-alias-label-primary,#f3f4f6); }
+  :host([data-dsh-theme="dark"]) :is(.card,.about-card) { background:var(--dsw-alias-bg-layer-1,#1f2023); color:var(--dsw-alias-label-primary,#f3f4f6); border-color:var(--dsw-alias-border-l2,#41434a); }
+  :host([data-dsh-theme="dark"]) :is(.description,.about-line,.release-notes,.notes-label,.current-version,.secondary) { color:var(--dsw-alias-label-secondary,#a9adb5); }
   :host([data-dsh-theme="dark"]) .primary { background:var(--dsw-alias-button-primary-fill,#f9fafb); color:var(--dsw-alias-label-primary-inverted,#191b1f); }
   :host([data-dsh-theme="dark"]) .primary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover,#e6e8eb); }
   :host([data-dsh-theme="dark"]) button:focus-visible { outline-color:var(--dsw-alias-label-primary,#f3f4f6); }
   :host([data-dsh-theme="dark"]) .details { color:var(--dsw-alias-label-primary,#f3f4f6); }
-  :host([data-dsh-theme="dark"]) :is(.secondary,.details,.version-switch,.version-tag-btn,.dialog-close):hover { background:var(--dsw-alias-interactive-bg-hover,rgba(255, 255, 255, .12)); }
+  :host([data-dsh-theme="dark"]) :is(.secondary,.details,.dialog-close):hover { background:var(--dsw-alias-interactive-bg-hover,rgba(255, 255, 255, .12)); }
   :host([data-dsh-theme="dark"]) .progress { background:var(--dsw-alias-bg-layer-2,#34363b); }
   :host([data-dsh-theme="dark"]) .progressValue { background:var(--dsw-alias-button-primary-fill,#f9fafb); }
   @media (prefers-reduced-motion:reduce) { .spinner { animation:none; } }
@@ -651,9 +509,8 @@ function onShowAbout(_event: Electron.IpcRendererEvent, info: AboutInfo): void {
   locale = desktopLocale(info.locale) ?? locale
   if (detailOpen) dismissCurrent()
   previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
-  aboutInfo = { ...info, locale }
+  aboutInfo = { locale }
   aboutOpen = true
-  versionPickerOpen = false
   renderAbout()
 }
 
@@ -672,7 +529,6 @@ ipcRenderer.on('desktop:ui-locale', onUiLocale)
 
 function closeAbout(): void {
   aboutOpen = false
-  versionPickerOpen = false
   renderAbout()
   previousFocus?.focus()
 }

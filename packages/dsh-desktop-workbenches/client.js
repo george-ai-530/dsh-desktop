@@ -3,7 +3,7 @@ window.__ModuleLoader__.load({
   factory: (require) => {
     const React = require('react')
     const { Service } = require('@deepseek-ai/cordis')
-    const { Switch, Toast, Modal } = require('@deepseek-ai/dsh-client-ui-primitives')
+    const { Toast, Modal } = require('@deepseek-ai/dsh-client-ui-primitives')
     const h = React.createElement
     const INSTALL_NS = 'dsh-desktop-workbenches.install'
     const installCopy = {
@@ -1905,10 +1905,10 @@ Start by asking for the first piece of information still missing.`,
       /* Only style controls owned by the Workbench UI. The native conversation
          is mounted inside .dshWbFrame and must keep its own composer styles.
          Keep reset specificity below component colors, including disabled states. */
-      :where(.dshWbMarket,.dshWbSidebarSwitcher,.dshWbInit,.dshWbNotice) :where(button,input,select,textarea):not([data-dsh-wb-primitive]){font-family:inherit;font-size:13px;line-height:20px;color:inherit;box-sizing:border-box}
-      :is(.dshWbMarket,.dshWbSidebarSwitcher,.dshWbInit,.dshWbNotice) button:not([data-dsh-wb-primitive]){cursor:pointer;transition:none}
-      :where(.dshWbMarket,.dshWbSidebarSwitcher,.dshWbInit,.dshWbNotice) :where(button):not([data-dsh-wb-primitive]):disabled{opacity:1;cursor:default;color:var(--dsw-alias-label-secondary)}
-      :is(.dshWbMarket,.dshWbSidebarSwitcher,.dshWbInit,.dshWbNotice) :is(button,input,select,textarea):not([data-dsh-wb-primitive]):focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:2px}
+      :where(.dshWbMarket,.dshWbInit,.dshWbNotice) :where(button,input,select,textarea):not([data-dsh-wb-primitive]){font-family:inherit;font-size:13px;line-height:20px;color:inherit;box-sizing:border-box}
+      :is(.dshWbMarket,.dshWbInit,.dshWbNotice) button:not([data-dsh-wb-primitive]){cursor:pointer;transition:none}
+      :where(.dshWbMarket,.dshWbInit,.dshWbNotice) :where(button):not([data-dsh-wb-primitive]):disabled{opacity:1;cursor:default;color:var(--dsw-alias-label-secondary)}
+      :is(.dshWbMarket,.dshWbInit,.dshWbNotice) :is(button,input,select,textarea):not([data-dsh-wb-primitive]):focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:2px}
       .dshWbBtn{border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:6px;padding:5px 10px;white-space:nowrap}
       a.dshWbBtn{display:inline-flex;align-items:center;text-decoration:none;color:inherit}
       .dshWbStatusForm{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;margin-top:12px}.dshWbStatusForm label{display:flex;flex-direction:column;gap:4px;flex:1 1 240px;min-width:0;font-size:13px}.dshWbStatusForm input{min-width:0;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;padding:5px 8px;background:var(--dsw-alias-bg-layer-1);color:inherit}.dshWbStatusResult{flex-basis:100%;font-size:13px;line-height:1.6}
@@ -2032,7 +2032,8 @@ Start by asking for the first piece of information still missing.`,
       html[data-platform=darwin]:not([data-fullscreen=true]) [data-sidebar-collapsed] [data-dsh-compact-toolbar]{padding-inline-start:var(--dsh-frame-leading-clearance,160px)}
       /* Provider drag styles must not consume controls or their nested icons. */
       html[data-platform=darwin] [data-dsh-compact-toolbar] :is(button,a,input,select,textarea,label,summary,iframe,[role=button],[role=tab],[role=combobox],[role=slider],[role=menu],[role=menuitem],[role=checkbox],[role=radio],[role=switch],[role=spinbutton],[role=listbox],[role=option],[role=dialog],[role=tree],[role=treeitem],[contenteditable]:not([contenteditable=false]),[tabindex],[draggable=true],[data-dsh-no-drag],[data-window-drag=false]),html[data-platform=darwin] [data-dsh-compact-toolbar] :is(button,a,input,select,textarea,label,summary,iframe,[role=button],[role=tab],[role=combobox],[role=slider],[role=menu],[role=menuitem],[role=checkbox],[role=radio],[role=switch],[role=spinbutton],[role=listbox],[role=option],[role=dialog],[role=tree],[role=treeitem],[contenteditable]:not([contenteditable=false]),[tabindex],[draggable=true],[data-dsh-no-drag],[data-window-drag=false]) *{-webkit-app-region:no-drag!important}
-.dshWbSidebarSwitcher{position:relative;z-index:30;display:flex;align-items:center;gap:8px;box-sizing:border-box;min-width:0;min-height:36px;margin:0 2px 8px;padding:0;overflow:visible}.dshWbWorkbenchHome{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex:0 0 auto;min-width:88px;box-sizing:border-box;min-height:36px;padding:7px 8px;font:inherit;line-height:22px;cursor:pointer;border:0;border-radius:var(--dsw-radius-md);background:transparent;color:var(--dsw-alias-label-primary);text-align:left;white-space:nowrap}.dshWbSidebarSwitcher.dshWb{font-size:14px;line-height:22px}.dshWbSidebarSwitcher .dshWbWorkbenchHome{font:inherit;line-height:22px}.dshWbWorkbenchHome svg{flex:0 0 auto}.dshWbSidebarSwitcher:is([data-selected=true],:hover,:focus-within){border-radius:var(--dsw-radius-md);background:var(--dsw-alias-interactive-bg-hover)}.dshWbCurrentMode{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex:1 1 0;min-width:0;max-width:none;padding:0 8px;color:var(--dsw-alias-label-secondary);font-size:12px}.dshWbCurrentModeLabel{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}.dshWbModeSwitch{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:5px;flex:1 1 0;min-width:0;max-width:none;box-sizing:border-box;height:36px;padding:7px 8px;border:0;border-radius:var(--dsw-radius-md);background:transparent;color:var(--dsw-alias-label-secondary);font-size:12px;cursor:pointer}.dshWbModeSwitch svg{flex:0 0 auto;color:var(--dsw-alias-label-tertiary)}.dshWbModeSwitch:focus-visible,.dshWbWorkbenchHome:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-2px}.dshWbModeMenu{position:absolute;z-index:32;left:2px;right:2px;top:calc(100% + 5px);display:grid;grid-auto-rows:max-content;gap:2px;box-sizing:border-box;max-height:calc(100dvh - 16px);overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:var(--dsw-alias-label-tertiary) transparent;padding:5px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 12px 28px rgba(0,0,0,.14)}.dshWbModeMenu::-webkit-scrollbar{width:8px}.dshWbModeMenu::-webkit-scrollbar-thumb{background:var(--dsw-alias-label-tertiary);border:2px solid var(--dsw-alias-bg-layer-1);border-radius:4px}.dshWbModeOptionRow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 24px;align-items:center;gap:0;min-width:0}.dshWbModeOptionRow[data-dragging=true]{opacity:.46}.dshWbModeOptionRow[data-drop-edge=before]::before,.dshWbModeOptionRow[data-drop-edge=after]::after{content:"";position:absolute;z-index:1;left:8px;right:6px;height:2px;border-radius:1px;background:var(--dsw-alias-label-primary);pointer-events:none}.dshWbModeOptionRow[data-drop-edge=before]::before{top:-2px}.dshWbModeOptionRow[data-drop-edge=after]::after{bottom:-2px}.dshWbModeOption{display:grid;grid-template-columns:18px minmax(0,1fr) 16px;align-items:center;gap:8px;width:100%;min-width:0;min-height:34px;padding:6px 8px;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-primary);text-align:left}.dshWbModeOption:hover:not(:disabled),.dshWbModeOption:focus-visible{background:var(--dsw-alias-bg-layer-2)}.dshWbModeOptionLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.dshWbModeOptionCheck{font-size:12px;text-align:center;color:var(--dsw-alias-label-primary)}.dshWbModeDragHandle{display:grid;place-items:center;width:24px;height:34px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:grab}.dshWbModeDragHandle:hover:not(:disabled),.dshWbModeDragHandle:focus-visible{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}.dshWbModeDragHandle:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.dshWbModeDragHandle:active{cursor:grabbing}.dshWbModeDragHandle:disabled{cursor:default;opacity:.35}.dshWbSrOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+      /* 侧栏切换器样式已随组件移除；屏幕阅读器专用规则仍被安装面板使用。 */
+      .dshWbSrOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       .dshWbBody{display:flex;flex:1;min-height:0;min-width:0}.dshWbConversation{container-type:inline-size;container-name:workbench-conversation;overflow:hidden;order:1;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
       .dshWbBusiness{order:2;width:var(--workbench-business-width,36%);min-width:220px;border-left:1px solid var(--dsw-alias-border-l2);overflow:auto;padding:18px;box-sizing:border-box}
       .dshWbBusiness[data-side=left]{order:0;border-left:0;border-right:1px solid var(--dsw-alias-border-l2)}
@@ -2046,7 +2047,6 @@ Start by asking for the first piece of information still missing.`,
       .dshWbPanelFailureIcon{display:flex;color:var(--dsw-alias-label-tertiary)}
       .dshWbPanelFailure h2{margin:0;font-size:15px;line-height:22px;font-weight:600}
       .dshWbPanelFailure p{margin:0;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary)}
-      .dshWbModeNameTooltip{display:none;position:absolute;top:calc(100% + 6px);right:0;width:max-content;max-width:100%;z-index:33;padding:6px 8px;border-radius:6px;background:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary-foreground);font-size:12px;line-height:18px;white-space:normal;overflow-wrap:anywhere;pointer-events:none;text-align:left;box-shadow:0 6px 18px rgba(0,0,0,.12)}.dshWbModeSwitch:hover .dshWbModeNameTooltip,.dshWbModeSwitch:focus-visible .dshWbModeNameTooltip{display:block}.dshWbModeSwitch[aria-expanded=true] .dshWbModeNameTooltip{display:none}
       .dshWbInit{width:100%;max-width:440px;min-width:0;box-sizing:border-box;padding:24px;margin:auto;overflow-wrap:anywhere}.dshWbInit h2{font-size:20px;line-height:28px;font-weight:600;margin:0 0 8px}.dshWbInit p{margin:0}.dshWbInit .dshWbInitWorkspace{display:flex;flex-direction:column;gap:8px;margin-top:24px;min-width:0}.dshWbInit label{font-size:13px;line-height:20px;font-weight:500}.dshWbInitWorkspaceRow{display:flex;flex-wrap:wrap;gap:8px;min-width:0}.dshWbInit select{flex:1 1 180px;width:100%;min-width:0;max-width:100%;height:34px;padding:5px 8px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:6px}.dshWbInit .dshWbBtn{min-height:34px;white-space:normal;overflow-wrap:anywhere;flex-shrink:0;max-width:100%}.dshWbInitNew{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:20px;padding-top:20px;border-top:1px solid var(--dsw-alias-border-l2)}.dshWbInitNew:first-of-type{margin-top:24px}.dshWbInitHint{font-size:12px;line-height:18px}
       .dshWbCatalogProgress{display:flex;align-items:center;gap:6px;color:var(--dsw-alias-label-secondary)}.dshWbCatalogProgress svg{animation:dshWbSpin .8s linear infinite}@media(prefers-reduced-motion:reduce){.dshWbCatalogProgress svg{animation:none}}
       .dshWbNotice{padding:10px 14px;background:var(--dsw-alias-bg-layer-2);font-size:13px;line-height:1.6;overflow-wrap:anywhere}
@@ -2058,7 +2058,7 @@ Start by asking for the first piece of information still missing.`,
       .dshWbMetrics .dshWbMetaItem small{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       .dshWbMetrics{display:inline-flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;overflow:hidden}.dshWbCard .dshWbMetaItem b{font-size:11px}.dshWbCard .dshWbAuthor b{font-size:12px}.dshWbCard .dshWbAvatar{width:16px;height:16px}.dshWbCard .dshWbBtn{border-radius:999px;corner-shape:round}.dshWbCard .dshWbUninstall,.dshWbCard .dshWbRunSwitch{corner-shape:round}.dshWbCard :is(.dshWbBtn,.dshWbUninstall,.dshWbRunSwitch)::before,.dshWbCard :is(.dshWbBtn,.dshWbUninstall,.dshWbRunSwitch)::after{corner-shape:round}.dshWbCard .dshWbAuthor{gap:4px}.dshWbCard .dshWbCardControls{gap:8px}.dshWbCard .dshWbInstalled{padding:4px 0;white-space:nowrap}
       .dshWbDescriptionHint{position:relative;min-width:0;margin-top:8px}
-      .dshWbSwitcherHint{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:10;display:flex;flex-direction:column;align-items:flex-start;gap:8px;border-radius:8px;padding:12px;background:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary-foreground);font-size:12px;line-height:18px;box-shadow:0 8px 24px rgba(0,0,0,.14)}.dshWbSwitcherHint button{border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;padding:3px 10px;font:inherit;cursor:pointer}.dshWbFavorite:focus-visible,.dshWbRoundButton:focus-visible,.dshWbUninstall:focus-visible,.dshWbRunSwitch:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:3px}
+      .dshWbFavorite:focus-visible,.dshWbRoundButton:focus-visible,.dshWbUninstall:focus-visible,.dshWbRunSwitch:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:3px}
       @container workbench-market (max-width:760px){.dshWbBrowseTools{margin-left:auto}.dshWbToolbar{align-items:flex-start}.dshWbMarketHeaderActions{max-width:180px}.dshWbCardBody{padding:16px}}
       @media(hover:none){.dshWbMediaZoom{opacity:1}}@media(prefers-reduced-motion:reduce){.dshWbMediaZoom,.dshWbRunSwitch,.dshWbRunSwitch::after{transition:none}}
       @container workbench-market (max-width:760px){.dshWbGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}}
@@ -2258,120 +2258,6 @@ Start by asking for the first piece of information still missing.`,
       const entry = owner && catalog.find((item) => item.id === owner)
       if (!entry) return null
       return h('span', { className: 'dshWb dshWbSessionIcon', role: 'img', title: displayEntry(entry).title, 'aria-label': both(`属于${entry.title}`, `Belongs to ${displayEntry(entry).title}`) }, h(WorkbenchIcon, { entry, size }))
-    }
-    function WorkbenchSidebarSwitcher({ service, wide, startSession, usePanelInfo }) {
-      useHostLocale(service)
-      const { state, catalog, ready, pending, marketOpen, switcherHint } = useWorkbench(service)
-      const activePanelId = usePanelInfo((info) => info.activePanelId)
-      const marketSelected = activePanelId === PANEL
-      const enabled = React.useSyncExternalStore(workbenchPreference.subscribe.bind(workbenchPreference), workbenchPreference.getSnapshot.bind(workbenchPreference))
-      const [open, setOpen] = React.useState(false)
-      const [draggingId, setDraggingId] = React.useState(null)
-      const [dropTarget, setDropTarget] = React.useState(null)
-      const [announcement, setAnnouncement] = React.useState('')
-      const menuRef = React.useRef(null)
-      React.useLayoutEffect(() => {
-        if (!open || !enabled || !wide) return
-        const updateHeight = () => {
-          const menu = menuRef.current
-          if (menu) menu.style.maxHeight = `${Math.max(0, window.innerHeight - menu.getBoundingClientRect().top - 8)}px`
-        }
-        updateHeight()
-        window.addEventListener('resize', updateHeight)
-        return () => window.removeEventListener('resize', updateHeight)
-      }, [open, enabled, wide])
-      const draggingIdRef = React.useRef(null)
-      const dropTargetRef = React.useRef(null)
-      if (!enabled || !wide) return null
-      const disabled = !ready || pending > 0 || service.blocked
-      const pinned = state.pinned.map((id) => catalog.find((item) => item.id === id)).filter((item) => item && item.installed !== false && state.added.includes(item.id) && service.catalog.has(item.id) && service.activationFor(item) !== 'off').map(displayEntry)
-      const active = state.active && pinned.find((item) => item.id === state.active)
-      const chooseNative = () => {
-        setOpen(false)
-        if (state.active || marketOpen) service.run(service.openNative(startSession))
-      }
-      const chooseWorkbench = (item) => {
-        setOpen(false)
-        if (item.id !== state.active || marketOpen) service.run(service.open(item.id))
-      }
-      const clearDrag = () => {
-        draggingIdRef.current = null
-        dropTargetRef.current = null
-        setDraggingId(null)
-        setDropTarget(null)
-      }
-      const move = (item, index, before, nextPosition) => {
-        if (before === item.id || nextPosition === index + 1) return
-        service.run(service.reorder(item.id, before))
-        setAnnouncement(both(`${item.title} 已移至第 ${nextPosition} 位`, `${item.title} moved to position ${nextPosition}`))
-      }
-      const onHandleKeyDown = (event, item, index) => {
-        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
-        event.preventDefault()
-        event.stopPropagation()
-        if (event.key === 'ArrowUp' && index > 0) move(item, index, pinned[index - 1].id, index)
-        if (event.key === 'ArrowDown' && index < pinned.length - 1) move(item, index, pinned[index + 2]?.id ?? null, index + 2)
-      }
-      const onDragStart = (event, item) => {
-        if (disabled) { event.preventDefault(); return }
-        event.stopPropagation()
-        draggingIdRef.current = item.id
-        dropTargetRef.current = null
-        setDraggingId(item.id)
-        setDropTarget(null)
-        event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.setData('text/plain', item.id)
-        event.dataTransfer.setData('application/x-dsh-workbench-id', item.id)
-        const preview = event.currentTarget.closest('.dshWbModeOptionRow')
-        if (preview && typeof event.dataTransfer.setDragImage === 'function') event.dataTransfer.setDragImage(preview, 12, 17)
-      }
-      const onDragOver = (event, targetId) => {
-        const sourceId = draggingIdRef.current
-        if (!sourceId) return
-        if (sourceId === targetId) {
-          if (dropTargetRef.current) { dropTargetRef.current = null; setDropTarget(null) }
-          return
-        }
-        event.preventDefault()
-        event.dataTransfer.dropEffect = 'move'
-        const rect = event.currentTarget.getBoundingClientRect()
-        const edge = event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
-        if (dropTargetRef.current?.id === targetId && dropTargetRef.current.edge === edge) return
-        dropTargetRef.current = { id: targetId, edge }
-        setDropTarget(dropTargetRef.current)
-      }
-      const onDrop = (event, targetId) => {
-        event.preventDefault()
-        event.stopPropagation()
-        const sourceId = event.dataTransfer.getData('application/x-dsh-workbench-id') || event.dataTransfer.getData('text/plain') || draggingIdRef.current
-        const edge = dropTargetRef.current?.id === targetId ? dropTargetRef.current.edge : null
-        const sourceIndex = pinned.findIndex((entry) => entry.id === sourceId)
-        const source = pinned[sourceIndex]
-        const remaining = pinned.filter((entry) => entry.id !== sourceId)
-        const targetIndex = remaining.findIndex((entry) => entry.id === targetId)
-        if (source && edge && targetIndex >= 0) {
-          const before = edge === 'before' ? targetId : (remaining[targetIndex + 1]?.id ?? null)
-          const nextPosition = edge === 'before' ? targetIndex + 1 : targetIndex + 2
-          move(source, sourceIndex, before, nextPosition)
-        }
-        clearDrag()
-      }
-      return h('nav', { className: 'dshWb dshWbSidebarSwitcher', 'data-dsh-workbench-switcher': '', 'data-selected': marketSelected || (activePanelId == null && !!active) ? 'true' : undefined, 'aria-label': tr('工作台导航'), onBlur: (event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false) }, onKeyDown: (event) => { if (event.key === 'Escape' && open) { setOpen(false); event.currentTarget.querySelector('.dshWbModeSwitch')?.focus() } } },
-        h('button', { type: 'button', className: 'dshWbWorkbenchHome', title: tr('工作台主页'), 'aria-label': tr('打开工作台主页'), 'aria-current': marketSelected ? 'page' : undefined, onClick: () => { setOpen(false); service.showMarket() } },
-          h(MarketIcon, { name: 'market', size: 16 }), h('span', null, tr('工作台'))),
-        switcherHint && h('div', { className: 'dshWbSwitcherHint', role: 'status' }, h('span', null, tr('在此切换会话与不同工作台')), h('button', { type: 'button', onClick: () => service.dismissSwitcherHint() }, tr('知道了'))),
-        pinned.length > 0
-          ? h('button', { type: 'button', className: 'dshWbModeSwitch', 'aria-describedby': 'dsh-wb-current-mode-tooltip', 'aria-label': both(`切换工作台，当前：${active?.title || tr('会话')}`, `Switch workbench, current: ${active?.title || tr('会话')}`), 'aria-haspopup': 'menu', 'aria-expanded': open, disabled, onClick: () => setOpen((value) => !value) },
-            h('span', { className: 'dshWbCurrentModeLabel' }, active?.title || tr('会话')), h(MarketIcon, { name: 'switch', size: 16 }), h('span', { id: 'dsh-wb-current-mode-tooltip', className: 'dshWbModeNameTooltip', role: 'tooltip' }, active?.title || tr('会话')))
-          : h('span', { className: 'dshWbCurrentMode', title: tr('会话'), 'aria-label': both('当前模式：会话', 'Current mode: Sessions') }, h('span', { className: 'dshWbCurrentModeLabel' }, tr('会话'))),
-        open && pinned.length > 0 && h('div', { ref: menuRef, className: 'dshWbModeMenu', role: 'menu', 'aria-label': tr('选择会话模式') },
-          h('button', { type: 'button', className: 'dshWbModeOption', role: 'menuitemradio', 'aria-checked': !state.active, onClick: chooseNative },
-            h(MarketIcon, { name: 'home', size: 16 }), h('span', { className: 'dshWbModeOptionLabel' }, tr('会话')), h('span', { className: 'dshWbModeOptionCheck', 'aria-hidden': true }, !state.active ? '✓' : '')),
-          ...pinned.map((item, index) => h('div', { key: item.id, className: 'dshWbModeOptionRow', role: 'none', 'data-dragging': draggingId === item.id || undefined, 'data-drop-edge': dropTarget?.id === item.id ? dropTarget.edge : undefined, onDragOver: (event) => onDragOver(event, item.id), onDrop: (event) => onDrop(event, item.id) },
-            h('button', { type: 'button', className: 'dshWbModeOption', role: 'menuitemradio', 'aria-checked': item.id === state.active, onClick: () => chooseWorkbench(item) },
-              h(WorkbenchIcon, { entry: item, size: 16 }), h('span', { className: 'dshWbModeOptionLabel' }, item.title), h('span', { className: 'dshWbModeOptionCheck', 'aria-hidden': true }, item.id === state.active ? '✓' : '')),
-            pinned.length > 1 && h('button', { type: 'button', role: 'menuitem', className: 'dshWbModeDragHandle', draggable: !disabled, disabled, title: both(`拖拽调整${item.title}顺序`, `Drag to reorder ${item.title}`), 'aria-label': both(`${item.title}，当前位置 ${index + 1}/${pinned.length}，使用上下方向键调整顺序`, `${item.title}, position ${index + 1} of ${pinned.length}. Use the up and down arrow keys to reorder.`), 'aria-keyshortcuts': 'ArrowUp ArrowDown', 'aria-roledescription': both('拖拽排序手柄', 'Reorder handle'), onKeyDown: (event) => onHandleKeyDown(event, item, index), onDragStart: (event) => onDragStart(event, item), onDragEnd: clearDrag }, h(MarketIcon, { name: 'gripVertical', size: 16 })))),
-          h('span', { className: 'dshWbSrOnly', role: 'status', 'aria-live': 'polite', 'aria-atomic': true }, announcement)))
     }
     function MetaItem({ icon, label, value }) {
       return h('span', { className: 'dshWbMetaItem', title: label }, h(MarketIcon, { name: icon }), h('b', null, value), h('small', null, label))
@@ -3225,16 +3111,11 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       }, 'workbenches: global session entry')
       ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: PANEL, inject: () => ({ service }) }, Market))
       ctx.slots.inject('shell.overlay', () => ctx.slots.register({ name: 'shell.overlay', id: 'desktop-restart-notice', locale: RESTART_NS, inject: () => ({ service, t: ctx.locale.bind(RESTART_NS) }) }, RestartNotice))
-      ctx.slots.inject('sidebar.quickSwitcher', () => ctx.slots.register({ name: 'sidebar.quickSwitcher', inject: () => ({ service }) }, WorkbenchSidebarSwitcher))
+      // 侧栏顶部的「工作台/会话」切换器已按产品要求移除：工作台市场与切换
+      // 入口不再出现在侧边栏；会话过滤保持当前模式，不再提供图形切换。
       ctx.slots.inject('sidebar.workspaces', () => ctx.slots.inject('sidebar.session.leading', () => ctx.slots.register({ name: 'sidebar.session.leading', inject: () => ({ service }) }, SessionWorkbenchIcon)))
-      function WorkbenchEnableSetting() {
-        React.useLayoutEffect(ensureStyles)
-        const enabled = React.useSyncExternalStore(workbenchPreference.subscribe.bind(workbenchPreference), workbenchPreference.getSnapshot.bind(workbenchPreference))
-      useHostLocale()
-      return h('div', { className: 'dshWbSetting' }, h('div', { className: 'dshWbSettingText' }, h('strong', null, tr('启用工作台功能')), h('small', null, tr('开启后可使用工作台市场和已安装的工作台；关闭后所有工作台不加载，不影响已保存的会话和数据。'))),
-          h(Switch, { checked: enabled, onChange: (next) => service.setEnabled(next), label: tr('启用工作台功能') }))
-      }
-      ctx.slots.inject('settings.general.item', () => ctx.slots.register({ name: 'settings.general.item', id: 'desktop-workbench-enable', order: 34 }, WorkbenchEnableSetting))
+      // 「启用工作台功能」设置行已按产品要求移除；workbenchPreference 保持
+      // 默认启用，仅不再提供通用设置开关。
       ctx.slots.inject('desktop.workbench.frame', () => ctx.slots.register({ name: 'desktop.workbench.frame', inject: () => ({ service }) }, Frame))
       ctx.effect(() => typeof ctx.uiWorkspace.registerSessionFilter === 'function'
         ? ctx.uiWorkspace.registerSessionFilter((sessionId) => service.sessionVisible(sessionId), service.subscribe.bind(service))
