@@ -1,0 +1,309 @@
+name: Release unsigned desktop installers
+
+# 本 workflow 为本 fork 的未签名发布专用：三平台以正式产品身份（io.dsh.desktop /
+# COWIN Harness Desktop）构建安装包，不做代码签名与 macOS 公证，不上传更新元数据，
+# 产物发布到本仓库的 GitHub Release。与上游 release.yml 互不影响：签名、Feishu/
+# ModelScope 通知与正式发布链路仍只走 release.yml。设计说明见
+# docs/release-runbook.md「Unsigned fork releases」。
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 版本号（不带 v 前缀，如 0.1.0；写入 package.json 并体现在 deb 文件名）
+        required: true
+        type: string
+      tag:
+        description: Release 标签（如 v0.1.0；不存在则在当前 commit 创建，已存在则仅覆盖资产）
+        required: true
+        type: string
+      notes:
+        description: Release 说明（可选；缺省使用固定模板）
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: unsigned-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  windows-x64:
+    name: Windows x64
+    runs-on: windows-2022
+    steps:
+      - name: Preserve shared asset fingerprints during checkout
+        shell: bash
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set app version
+        run: npm version --no-git-tag-version --allow-same-version "${{ inputs.version }}"
+      - name: Configure native download caches before dependency installation
+        shell: bash
+        run: |
+          # Electron install.js reads the lowercase setting; builder uses uppercase.
+          echo "electron_config_cache=$RUNNER_TEMP/electron-cache" >> "$GITHUB_ENV"
+          echo "ELECTRON_CACHE=$RUNNER_TEMP/electron-cache" >> "$GITHUB_ENV"
+          echo "ELECTRON_BUILDER_CACHE=$RUNNER_TEMP/electron-builder-cache" >> "$GITHUB_ENV"
+      - name: Cache Electron, electron-builder and Office runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            ${{ env.ELECTRON_CACHE }}
+            ${{ env.ELECTRON_BUILDER_CACHE }}
+          key: windows-packaging-v1-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
+          restore-keys: |
+            windows-packaging-v1-
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Cache generated Office and PPT assets
+        uses: actions/cache@v4
+        with:
+          enableCrossOsArchive: true
+          path: |
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: desktop-generated-assets-v1-${{ hashFiles('scripts/office-runtime/**', 'packages/dsh-desktop-office/**', 'scripts/*ppt*.mjs', 'scripts/ppt/**', 'packages/ppt-runtime/**', 'package-lock.json') }}
+          restore-keys: desktop-generated-assets-v1-
+      - run: npm run build
+      - name: Verify PPT generation leaves tracked sources clean
+        run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
+      - name: Build Windows x64 installer
+        run: node scripts/verify/verify-target.mjs win32 x64 && node scripts/release/electron-builder-windows.mjs --win --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-windows-x64
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            dist/cowin-harness-desktop-windows-x64-setup.exe
+            dist/cowin-harness-desktop-windows-x64-setup.exe.blockmap
+            dist/latest.yml
+
+  build-macos:
+    name: macOS ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            label: Apple Silicon
+            runner: macos-15
+          - arch: x64
+            label: Intel
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set app version
+        run: npm version --no-git-tag-version --allow-same-version "${{ inputs.version }}"
+      - name: Configure native download caches before dependency installation
+        shell: bash
+        run: |
+          echo "electron_config_cache=$RUNNER_TEMP/electron-cache" >> "$GITHUB_ENV"
+          echo "ELECTRON_CACHE=$RUNNER_TEMP/electron-cache" >> "$GITHUB_ENV"
+          echo "ELECTRON_BUILDER_CACHE=$RUNNER_TEMP/electron-builder-cache" >> "$GITHUB_ENV"
+      - name: Cache Electron downloads before dependency installation
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.ELECTRON_CACHE }}
+          key: electron-downloads-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: electron-downloads-v1-${{ runner.os }}-${{ runner.arch }}-
+      - name: Cache Office runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+          key: office-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
+          restore-keys: |
+            office-runtime-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Cache generated Office and PPT assets
+        uses: actions/cache@v4
+        with:
+          enableCrossOsArchive: true
+          path: |
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: desktop-generated-assets-v1-${{ hashFiles('scripts/office-runtime/**', 'packages/dsh-desktop-office/**', 'scripts/*ppt*.mjs', 'scripts/ppt/**', 'packages/ppt-runtime/**', 'package-lock.json') }}
+          restore-keys: desktop-generated-assets-v1-
+      - run: npm run build
+      - name: Verify PPT generation leaves tracked sources clean
+        run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
+      - name: Build unsigned ${{ matrix.label }} package
+        # 未签名构建：关闭签名身份自动发现；公证钩子在缺少 Apple 凭据时自动跳过。
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: node scripts/verify/verify-target.mjs darwin ${{ matrix.arch }} && npx --no-install electron-builder --mac --${{ matrix.arch }} --publish never
+      - name: Rename latest-mac metadata per architecture
+        # 未签名构建通常也会随生产 publish 配置生成该文件；缺失时不视为失败。
+        run: |
+          if [ -f dist/latest-mac.yml ]; then
+            mv dist/latest-mac.yml dist/latest-mac-${{ matrix.arch }}.yml
+          else
+            echo "latest-mac.yml not generated; skipping rename"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-macos-${{ matrix.arch }}
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            dist/cowin-harness-desktop-mac-${{ matrix.arch }}.dmg
+            dist/cowin-harness-desktop-mac-${{ matrix.arch }}.zip
+            dist/cowin-harness-desktop-mac-${{ matrix.arch }}.zip.blockmap
+            dist/latest-mac-${{ matrix.arch }}.yml
+
+  build-linux:
+    name: Linux x64
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set app version
+        run: npm version --no-git-tag-version --allow-same-version "${{ inputs.version }}"
+      - name: Configure native download caches before dependency installation
+        shell: bash
+        run: |
+          echo "electron_config_cache=$RUNNER_TEMP/electron-cache" >> "$GITHUB_ENV"
+          echo "ELECTRON_CACHE=$RUNNER_TEMP/electron-cache" >> "$GITHUB_ENV"
+          echo "ELECTRON_BUILDER_CACHE=$RUNNER_TEMP/electron-builder-cache" >> "$GITHUB_ENV"
+      - name: Cache Electron downloads before dependency installation
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.ELECTRON_CACHE }}
+          key: electron-downloads-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: electron-downloads-v1-${{ runner.os }}-${{ runner.arch }}-
+      - name: Cache Office runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+          key: office-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
+          restore-keys: |
+            office-runtime-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Cache generated Office and PPT assets
+        uses: actions/cache@v4
+        with:
+          enableCrossOsArchive: true
+          path: |
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: desktop-generated-assets-v1-${{ hashFiles('scripts/office-runtime/**', 'packages/dsh-desktop-office/**', 'scripts/*ppt*.mjs', 'scripts/ppt/**', 'packages/ppt-runtime/**', 'package-lock.json') }}
+          restore-keys: desktop-generated-assets-v1-
+      - run: npm run build
+      - name: Verify PPT generation leaves tracked sources clean
+        run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
+      - name: Build Linux x64 deb package
+        run: node scripts/verify/verify-target.mjs linux x64 && npx --no-install electron-builder --linux deb --x64 --publish never --config electron-builder.linux.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-linux-x64
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            dist/cowin-harness-desktop-linux-x64-*.deb
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [windows-x64, build-macos, build-linux]
+    runs-on: ubuntu-24.04
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Validate inputs and collect installer assets
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]] \
+            || { echo "::error::version must be semver without the v prefix (e.g. 0.1.0)"; exit 1; }
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]] \
+            || { echo "::error::tag must be vX.Y.Z (e.g. v0.1.0)"; exit 1; }
+          mkdir release-assets
+          find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.deb' \) \
+            -exec cp {} release-assets/ \;
+          expected=(cowin-harness-desktop-windows-x64-setup.exe
+            cowin-harness-desktop-mac-arm64.dmg cowin-harness-desktop-mac-arm64.zip
+            cowin-harness-desktop-mac-x64.dmg cowin-harness-desktop-mac-x64.zip)
+          for name in "${expected[@]}"; do
+            test -s "release-assets/$name" || { echo "::error::Missing expected asset: $name"; exit 1; }
+          done
+          shopt -s nullglob
+          debs=(release-assets/cowin-harness-desktop-linux-x64-*.deb)
+          test "${#debs[@]}" -ge 1 || { echo "::error::Missing Linux deb asset"; exit 1; }
+      - name: Generate SHA256 checksums
+        run: |
+          cd release-assets
+          sha256sum -- * > SHA256SUMS.txt
+      - name: Write release notes
+        run: |
+          set -euo pipefail
+          if [ -n "$NOTES_INPUT" ]; then
+            printf '%s\n' "$NOTES_INPUT" > notes.md
+          else
+            cat > notes.md <<NOTES
+          COWIN Harness Desktop ${RELEASE_VERSION}（未签名构建 / unsigned build）
+
+          - 来源 commit: ${GITHUB_SHA}
+          - Windows: cowin-harness-desktop-windows-x64-setup.exe
+          - macOS (Apple Silicon): cowin-harness-desktop-mac-arm64.dmg / .zip
+          - macOS (Intel): cowin-harness-desktop-mac-x64.dmg / .zip
+          - Linux (deb): cowin-harness-desktop-linux-x64-${RELEASE_VERSION}.deb
+          - 校验和: SHA256SUMS.txt
+
+          本批安装包使用正式产品身份（COWIN Harness Desktop）但未做代码签名与 macOS 公证：
+
+          - macOS 首次启动需在应用图标上右键选择“打开”；
+          - Windows 可能出现 SmartScreen 提示，选择“仍要运行”；
+          - 本 fork 已禁用应用内自动更新，这些包不会连接官方更新源；
+          - 请勿覆盖安装官方签名版本（两者共享同一数据目录）。
+          NOTES
+          fi
+        env:
+          NOTES_INPUT: ${{ inputs.notes }}
+      - name: Create or update GitHub Release
+        id: publish_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$RELEASE_TAG" \
+              --title "COWIN Harness Desktop ${RELEASE_VERSION}" \
+              --notes-file notes.md \
+              --repo "$GITHUB_REPOSITORY"
+          else
+            # 标签不存在时由 --target 在当前 commit 创建；标签已存在时忽略 --target。
+            gh release create "$RELEASE_TAG" release-assets/* \
+              --target "$GITHUB_SHA" \
+              --title "COWIN Harness Desktop ${RELEASE_VERSION}" \
+              --notes-file notes.md \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+          echo "url=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json url -q .url)" >> "$GITHUB_OUTPUT"
+      - name: Show release URL
+        run: echo "Release published at ${{ steps.publish_release.outputs.url }}"

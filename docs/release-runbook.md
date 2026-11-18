@@ -31,6 +31,22 @@ The former `signed_version`, `prerelease_tag` and `release_tag` fields are now `
 
 Popup generation and Chinese-to-English translation use Copilot `--available-tools=` (empty tool list) and `--disable-builtin-mcps`. A bare `--deny-tool '*'` is rejected by Copilot CLI 1.0.105 before model execution.
 
+## Unsigned fork releases
+
+The `Release unsigned desktop installers` workflow (`unsigned-release.yml`) builds production-identity but unsigned installers for this fork on all three platforms and publishes them to this repository's GitHub Releases. It is independent of the `Release desktop installers` workflow above: signing, notarization, Feishu/ModelScope publication and update-feed metadata remain exclusive to that workflow.
+
+Dispatch inputs:
+
+| Input | Use |
+| --- | --- |
+| `version` | Required semver without the `v` prefix (e.g. `0.1.0`); written into `package.json` before the build and reflected in artifact names |
+| `tag` | Required release tag (e.g. `v0.1.0`); created at the dispatching commit when absent, otherwise only assets are replaced |
+| `notes` | Optional release notes; a fixed bilingual template is used when empty |
+
+Build jobs reuse the native runners and the `verify-target` gate from the signed workflow: Windows x64 NSIS, macOS arm64/x64 DMG+ZIP (`CSC_IDENTITY_AUTO_DISCOVERY=false`; the notarization hook skips itself when Apple credentials are absent), and Linux x64 deb. The afterPack package-content gates (asarUnpack, Harness boot, PPT, Office) run on every platform. A final job validates the artifact set, generates `SHA256SUMS.txt`, and creates or updates the GitHub Release. Only installers and the checksum file are uploaded to the Release; `latest*.yml` and blockmaps stay in workflow artifacts because this fork disables the in-app update chain.
+
+These builds are unsigned: macOS requires right-click → Open on first launch, and Windows may show a SmartScreen prompt. The production app id matches the officially signed build, so do not install over an official installation; both share the same user-data directory. Re-running with the same `tag` replaces assets with `--clobber` and never moves the tag.
+
 ## Release history
 
 Formal publication and archive backfill share the `desktop-modelscope-release-history` concurrency group. After uploading the versioned archive, both read `releases/versions.json` directly from ModelScope with cache bypass and append the new version to its existing entries. Existing tags, archive URLs and extra metadata are retained; rerunning the same version does not duplicate it. The JSON object is uploaded as a complete document, but the operation preserves history rather than replacing it with the current version alone.
