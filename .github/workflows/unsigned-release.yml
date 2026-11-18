@@ -199,6 +199,12 @@ jobs:
           key: office-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
           restore-keys: |
             office-runtime-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install CJK fonts for Office template previews
+        # 上游 release.yml 从不在 Linux 上构建；模板预览依赖系统中文字体，
+        # ubuntu runner 默认没有 CJK 字体，字形覆盖检查会得到 0.0 并失败。
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund
       - name: Cache generated Office and PPT assets
