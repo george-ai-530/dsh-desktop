@@ -21,6 +21,11 @@ on:
         description: Release 说明（可选；缺省使用固定模板）
         required: false
         type: string
+      allow_partial:
+        description: 允许部分平台发布（Linux 构建失败时仅发布 Windows/macOS 资产）
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -233,10 +238,17 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     needs: [windows-x64, build-macos, build-linux]
+    # 默认三平台全部成功才发布；allow_partial 显式允许在 Linux 失败时仅发布 Windows/macOS。
+    if: >-
+      always() &&
+      needs.windows-x64.result == 'success' &&
+      needs.build-macos.result == 'success' &&
+      (needs.build-linux.result == 'success' || inputs.allow_partial == true)
     runs-on: ubuntu-24.04
     env:
       RELEASE_TAG: ${{ inputs.tag }}
       RELEASE_VERSION: ${{ inputs.version }}
+      ALLOW_PARTIAL: ${{ inputs.allow_partial }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -257,9 +269,11 @@ jobs:
           for name in "${expected[@]}"; do
             test -s "release-assets/$name" || { echo "::error::Missing expected asset: $name"; exit 1; }
           done
-          shopt -s nullglob
-          debs=(release-assets/cowin-harness-desktop-linux-x64-*.deb)
-          test "${#debs[@]}" -ge 1 || { echo "::error::Missing Linux deb asset"; exit 1; }
+          if [ "$ALLOW_PARTIAL" != 'true' ]; then
+            shopt -s nullglob
+            debs=(release-assets/cowin-harness-desktop-linux-x64-*.deb)
+            test "${#debs[@]}" -ge 1 || { echo "::error::Missing Linux deb asset"; exit 1; }
+          fi
       - name: Generate SHA256 checksums
         run: |
           cd release-assets
@@ -287,6 +301,10 @@ jobs:
           - 本 fork 已禁用应用内自动更新，这些包不会连接官方更新源；
           - 请勿覆盖安装官方签名版本（两者共享同一数据目录）。
           NOTES
+          fi
+          if [ "$ALLOW_PARTIAL" = 'true' ]; then
+            sed -i '/^- Linux (deb): /d' notes.md
+            sed -i '/^- 校验和: SHA256SUMS.txt/a - Linux (deb)：本轮未包含，待后续补充上传' notes.md
           fi
         env:
           NOTES_INPUT: ${{ inputs.notes }}
