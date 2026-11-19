@@ -1,20 +1,16 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { aboutMenuLabel, aboutUsesPage, buildDarwinDesktopMenu, buildWindowsApplicationMenu, externalUrlToOpen, insertFileMenu, safeModeMenuLabel, shortcutFileMenuLabels, standardMenuLabels, updateMenuLabel } from '../../src/main/shell/enterprise-menu'
+import { aboutUsesPage, buildDarwinDesktopMenu, buildWindowsApplicationMenu, externalUrlToOpen, standardMenuLabels } from '../../src/main/shell/enterprise-menu'
 
 // COWIN rebrand contract: the product-site ("了解企业版") entry is gone from
 // the macOS menu and the in-page settings footer — no dshdesktop.com links
-// remain in user-visible chrome. About/Update ordering and the rest of the
-// command set are unchanged.
+// remain in user-visible chrome. Both platforms keep the same trimmed command
+// set (About, Restart, Quit plus the platform-standard groups); Check for
+// Updates, Safe Mode, the Harness log and the file menu have no menu item
+// anywhere.
 describe('application menu', () => {
-  it('uses the product labels for both languages', () => {
-    expect(updateMenuLabel('zh-CN')).toBe('检查更新…')
-    expect(updateMenuLabel('en-US')).toBe('Check for Updates…')
-    expect(aboutMenuLabel('zh-CN')).toBe('关于 COWIN Harness Desktop')
-    expect(aboutMenuLabel('en-US')).toBe('About COWIN Harness Desktop')
-    expect(safeModeMenuLabel('zh-CN')).toBe('以安全模式重启…')
-    expect(safeModeMenuLabel('en-US')).toBe('Restart as Safe Mode…')
+  it('routes the about dialog and external links', () => {
     expect(aboutUsesPage('dsh-app://app/', 'dsh-app')).toBe(true)
     expect(aboutUsesPage('dsh-app://app/index.html', 'dsh-app')).toBe(true)
     expect(aboutUsesPage('file:///tmp/splash.html', 'dsh-app')).toBe(false)
@@ -23,91 +19,82 @@ describe('application menu', () => {
     expect(externalUrlToOpen('not a url')).toBeUndefined()
   })
 
-  it.each(['zh-CN', 'en-US'])('orders about, updates, then restart in the %s app menu with no enterprise item', locale => {
+  it.each(['zh-CN', 'en-US'])('keeps about, restart and the platform hide group in the %s app menu', locale => {
+    const zh = locale.startsWith('zh')
+    const appName = 'COWIN Harness Desktop Shell'
     const showAbout = vi.fn()
-    const checkForUpdates = vi.fn()
     const restart = vi.fn()
-    const restartSafeMode = vi.fn()
-    const showHarnessLog = vi.fn()
     const hide = vi.fn()
     const hideOthers = vi.fn()
     const unhideAll = vi.fn()
     const quit = vi.fn()
     const menu = buildDarwinDesktopMenu({
       locale,
-      appName: 'COWIN Harness Desktop Shell',
+      appName,
       showAbout,
-      checkForUpdates,
       restart,
-      restartSafeMode,
-      showHarnessLog,
       hide,
       hideOthers,
       unhideAll,
       quit
     })
     const submenu = menu[0]?.submenu ?? []
-    expect(submenu[0]?.label).toBe(locale.startsWith('zh') ? '关于 COWIN Harness Desktop' : 'About COWIN Harness Desktop')
-    expect(submenu[1]?.label).toBe(locale.startsWith('zh') ? '检查更新…' : 'Check for Updates…')
-    expect(submenu[1]?.accelerator).toBe('CmdOrCtrl+U')
-    expect(submenu[2]?.label).toBe(locale.startsWith('zh') ? '重启' : 'Restart')
-    expect(submenu[2]?.accelerator).toBe('CmdOrCtrl+Shift+R')
-    expect(submenu[3]?.label).toBe(locale.startsWith('zh') ? '以安全模式重启…' : 'Restart as Safe Mode…')
-    expect(submenu[4]?.label).toBe(locale.startsWith('zh') ? '显示 Harness 日志' : 'Show Harness Log')
+    expect(submenu[0]?.label).toBe(zh ? '关于 COWIN Harness Desktop' : 'About COWIN Harness Desktop')
+    expect(submenu[1]?.label).toBe(zh ? '重启' : 'Restart')
+    expect(submenu[1]?.accelerator).toBe('CmdOrCtrl+Shift+R')
+    expect(submenu[3]?.label).toBe(zh ? `隐藏 ${appName}` : `Hide ${appName}`)
+    expect(submenu[3]?.accelerator).toBe('Command+H')
+    expect(submenu[4]?.label).toBe(zh ? '隐藏其他' : 'Hide Others')
+    expect(submenu[5]?.label).toBe(zh ? '全部显示' : 'Show All')
+    expect(submenu[7]?.label).toBe(zh ? `退出 ${appName}` : `Quit ${appName}`)
+    expect(submenu[7]?.accelerator).toBe('Command+Q')
+    // 检查更新、安全模式重启、Harness 日志与文件菜单在所有平台都没有菜单项。
     expect(submenu.some(item => item.label === '了解企业版' || item.label === 'Explore Enterprise')).toBe(false)
+    const labels = submenu.map(item => item.label)
+    for (const removed of [
+      '检查更新…', 'Check for Updates…',
+      '以安全模式重启…', 'Restart as Safe Mode…',
+      '显示 Harness 日志', 'Show Harness Log',
+      '文件', 'File', '关闭页面或窗口', 'Close Page or Window'
+    ]) {
+      expect(labels).not.toContain(removed)
+    }
+    const accelerators = submenu.map(item => item.accelerator)
+    expect(accelerators).not.toContain('CmdOrCtrl+U')
     submenu[0]?.click?.()
     submenu[1]?.click?.()
-    submenu[2]?.click?.()
     submenu[3]?.click?.()
     submenu[4]?.click?.()
-    expect(showAbout).toHaveBeenCalledOnce()
-    expect(checkForUpdates).toHaveBeenCalledOnce()
-    expect(restart).toHaveBeenCalledOnce()
-    expect(restartSafeMode).toHaveBeenCalledOnce()
-    expect(showHarnessLog).toHaveBeenCalledOnce()
-    submenu[6]?.click?.()
+    submenu[5]?.click?.()
     submenu[7]?.click?.()
-    submenu[8]?.click?.()
-    submenu[10]?.click?.()
+    expect(showAbout).toHaveBeenCalledOnce()
+    expect(restart).toHaveBeenCalledOnce()
     expect(hide).toHaveBeenCalledOnce()
     expect(hideOthers).toHaveBeenCalledOnce()
     expect(unhideAll).toHaveBeenCalledOnce()
     expect(quit).toHaveBeenCalledOnce()
     const standard = standardMenuLabels(locale)
-    expect(menu.map(item => item.label)).toEqual(['COWIN Harness Desktop Shell', standard.edit, standard.window])
+    expect(menu.map(item => item.label)).toEqual([appName, standard.edit, standard.window])
     expect(menu[1]?.submenu?.[0]).toMatchObject({ role: 'undo', label: standard.undo })
     expect(menu[1]?.submenu?.[6]).toMatchObject({ role: 'selectAll', label: standard.selectAll })
     expect(menu[2]?.submenu?.[0]).toMatchObject({ role: 'minimize', label: standard.minimize })
     expect(menu[2]?.submenu?.[1]).toMatchObject({ role: 'close', label: standard.close })
-    const withoutSafeMode = buildDarwinDesktopMenu({
-      locale,
-      appName: 'COWIN Harness Desktop Shell',
-      showAbout,
-      checkForUpdates,
-      restart,
-      showHarnessLog,
-      hide,
-      hideOthers,
-      unhideAll,
-      quit
-    })
-    const safeModeOmitted = withoutSafeMode[0]?.submenu ?? []
-    expect(safeModeOmitted.some(item => item.label === safeModeMenuLabel(locale))).toBe(false)
-    expect(safeModeOmitted[2]?.label).toBe(locale.startsWith('zh') ? '重启' : 'Restart')
-    expect(safeModeOmitted[3]?.label).toBe(locale.startsWith('zh') ? '显示 Harness 日志' : 'Show Harness Log')
   })
 
-  it('places the file menu after the application menu', () => {
-    const labels = shortcutFileMenuLabels('zh-CN')
-    const menu = insertFileMenu([
-      { label: 'COWIN Harness Desktop Shell', submenu: [{ label: '关于 COWIN Harness Desktop' }] },
-      { label: 'Edit' }
-    ], { label: labels.fileMenu, submenu: [{ label: labels.closePage }] })
-    expect(menu[0]?.submenu?.[0]?.label).toBe('关于 COWIN Harness Desktop')
-    expect(menu[1]?.label).toBe('文件')
-    expect(menu[1]?.submenu?.[0]?.label).toBe('关闭页面或窗口')
-    expect(menu[2]?.label).toBe('Edit')
-    expect(shortcutFileMenuLabels('en-US').closePage).toBe('Close Page or Window')
+  it('collapses the app menu to about and the hide group when restart is unavailable', () => {
+    const menu = buildDarwinDesktopMenu({
+      locale: 'zh-CN',
+      appName: 'DSH',
+      showAbout: () => {},
+      hide: () => {},
+      hideOthers: () => {},
+      unhideAll: () => {},
+      quit: () => {}
+    })
+    const submenu = menu[0]?.submenu ?? []
+    expect(submenu[1]?.type).toBe('separator')
+    expect(submenu[2]?.label).toBe('隐藏 DSH')
+    expect(submenu.map(item => item.label)).not.toContain('重启')
   })
 
   it('keeps only Restart and Quit on the hidden Windows application menu', () => {
@@ -127,7 +114,6 @@ describe('application menu', () => {
     expect(labels).not.toContain('以安全模式重启…')
     expect(labels).not.toContain('显示 Harness 日志')
     expect(labels).not.toContain('检查更新…')
-    expect(labels).not.toContain(safeModeMenuLabel('zh-CN'))
     const accelerators = application.map(child => child.accelerator)
     expect(accelerators).toEqual(expect.arrayContaining(['CmdOrCtrl+Shift+R']))
     expect(accelerators).not.toContain('CmdOrCtrl+Shift+M')
@@ -141,7 +127,7 @@ describe('application menu', () => {
     expect(calls).toEqual(['restart'])
     const english = buildWindowsApplicationMenu({ locale: 'en', restart: () => {}, quit: () => {} })
     expect(english[0]?.label).toBe('Application')
-    expect((english[0]?.submenu ?? []).some(item => item.label === safeModeMenuLabel('en'))).toBe(false)
+    expect((english[0]?.submenu ?? []).some(item => item.label === 'Restart as Safe Mode…')).toBe(false)
   })
 
   it('installs the menu from the new shell', async () => {
@@ -166,6 +152,10 @@ describe('application menu', () => {
     expect(source.includes('void restartDesktop()')).toBe(true)
     expect(source.includes('restartInSafeMode()')).toBe(true)
     expect(source.includes('shouldStartInSafeMode(process.argv)')).toBe(true)
+    // 文件菜单已随两平台命令集对齐移除，页面快捷键走通用键盘分发。
+    expect(source.includes('insertFileMenu')).toBe(false)
+    expect(source.includes('shortcutFileMenuLabels')).toBe(false)
+    expect(source.includes('fileMenu(')).toBe(false)
     expect(source.includes('bundledHarnessVersion(')).toBe(true)
     expect(source.includes("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))")).toBe(true)
     expect(source.includes('configureDesktopIdentity()')).toBe(true)

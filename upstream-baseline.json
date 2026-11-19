@@ -108,7 +108,7 @@
     {
       "path": "src/main/shell/keyboard.ts",
       "upstream": ["apps/desktop/src/keyboard.ts"],
-      "divergences": ["侧边栏浏览器客人可以接收快捷键", "没有强制更新遮罩，所以不按遮罩挡住按键", "Linux 使用已有 desktop:linux 协议分派原生桌面快捷键"]
+      "divergences": ["侧边栏浏览器客人可以接收快捷键", "没有强制更新遮罩，所以不按遮罩挡住按键", "Linux 使用已有 desktop:linux 协议分派原生桌面快捷键", "无文件菜单加速器交接：fileMenu/updateMenu 已随两平台菜单对齐移除，page.close 与其他定义键一样经通用键盘分发"]
     },
     {
       "path": "src/host/file-drag.ts",

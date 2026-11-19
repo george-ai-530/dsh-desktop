@@ -45,7 +45,7 @@ import { DesktopHostFatalError, DesktopHostProcess } from './backend/host-proces
 import { continueAfterHostStartup, createHostFailureIntake } from './host-failure-intake'
 import { readDesktopLoginShellEnvironment, resolveDesktopLoginShellConfig } from './backend/login-shell-environment'
 import { attachDesktopStorage } from './desktop-storage-bridge'
-import { aboutUsesPage, buildDarwinDesktopMenu, buildWindowsApplicationMenu, externalUrlToOpen, insertFileMenu, shortcutFileMenuLabels } from './enterprise-menu'
+import { aboutUsesPage, buildDarwinDesktopMenu, buildWindowsApplicationMenu, externalUrlToOpen } from './enterprise-menu'
 import { installDesktopShortcuts, type DesktopShortcutController } from './keyboard'
 import { installDesktopFileDrag } from './file-drag'
 import { runQuitSteps } from './quit-steps'
@@ -558,7 +558,7 @@ async function main(): Promise<void> {
       return
     }
     if (process.platform !== 'darwin') return
-    const template = insertFileMenu(buildDarwinDesktopMenu({
+    const template = buildDarwinDesktopMenu({
       locale: menuLocale,
       appName: app.name,
       showAbout: () => {
@@ -566,19 +566,12 @@ async function main(): Promise<void> {
         if (target === undefined || target.isDestroyed()) return
         void presentAbout(target, menuLocale).catch((error: unknown) => { console.error(error) })
       },
-      checkForUpdates: () => {
-        void checkForUpdates(true).catch((error: unknown) => { console.error(error) })
-      },
       restart: () => { void restartDesktop() },
-      ...(shouldStartInSafeMode(process.argv) || process.env.DSH_DESKTOP_SAFE_MODE === '1'
-        ? {}
-        : { restartSafeMode: () => { restartInSafeMode() } }),
-      showHarnessLog: () => { shell.showItemInFolder(join(app.getPath('logs'), 'harness.log')) },
       hide: () => { app.hide() },
       hideOthers: () => { Menu.sendActionToFirstResponder('hideOtherApplications:') },
       unhideAll: () => { Menu.sendActionToFirstResponder('unhideAllApplications:') },
       quit: () => { app.quit() }
-    }), shortcuts?.fileMenu(shortcutFileMenuLabels(menuLocale)))
+    })
     Menu.setApplicationMenu(Menu.buildFromTemplate(template as MenuItemConstructorOptions[]))
   }
   refreshApplicationMenu()
@@ -653,8 +646,7 @@ async function main(): Promise<void> {
   shortcuts = installDesktopShortcuts(
     () => mainWindow,
     app.getPath('userData'),
-    process.platform === 'darwin' ? 'macos' : process.platform === 'win32' ? 'windows' : 'linux',
-    refreshApplicationMenu
+    process.platform === 'darwin' ? 'macos' : process.platform === 'win32' ? 'windows' : 'linux'
   )
   shortcuts.attach(window)
   refreshApplicationMenu()

@@ -5,7 +5,6 @@ import {
   effectiveShortcuts,
   parseShortcutDefinitions,
   parseShortcutEdit,
-  presentBinding,
   type NormalizedBinding,
   type ShortcutConfigSnapshot,
   type ShortcutDefinition,
@@ -13,7 +12,6 @@ import {
   type ShortcutRevision
 } from '@deepseek-ai/dsh-client-shortcuts/protocol'
 import { DESKTOP_IPC, assertDesktopSender } from './window/ipc'
-import type { DesktopMenuItem } from './enterprise-menu'
 import { desktopKeybindings } from './keybindings'
 
 interface ShortcutFrame {
@@ -52,7 +50,6 @@ interface ShortcutWindow {
 }
 
 export interface DesktopShortcutController {
-  fileMenu(labels: { fileMenu: string, closePage: string }): DesktopMenuItem
   sendEditingKey(keyCode: string, modifiers: Array<'control'>): void
   attach(window: ShortcutWindow): void
   attachGuest(window: ShortcutWindow, guest: ShortcutContents, name: string): () => void
@@ -66,35 +63,20 @@ export interface DesktopShortcutController {
 export function installDesktopShortcuts(
   getWindow: () => ShortcutWindow | undefined,
   userData: string,
-  platform: ShortcutPlatform,
-  updateMenu: () => void
+  platform: ShortcutPlatform
 ): DesktopShortcutController {
   let definitions: readonly ShortcutDefinition[] = []
   let recording = false
   let revision: ShortcutRevision | undefined
-  let closeBinding: NormalizedBinding | null = null
   let editingInput: ShortcutContents | undefined
   const scopedDesktop = platform === 'windows' || platform === 'macos' || platform === 'linux'
   const disposers = new Set<() => void>()
-  const closeAccelerator = (): string | undefined => presentBinding(closeBinding, platform).aria
-    ?.replace('Meta+', 'Command+').replace(/Arrow(Up|Down|Left|Right)$/u, '$1')
-  const sendMenuClose = (): void => {
-    const window = getWindow()
-    if (window === undefined || window.isDestroyed() || !window.isFocused() || !window.isEnabled()
-      || revision === undefined || recording) return
-    window.webContents.send(DESKTOP_IPC.shortcutsInput, { kind: 'menu', commandId: 'page.close', revision })
-  }
   let keys = new Set<string>()
   const publish = (snapshot: ShortcutConfigSnapshot): void => {
-    const wasEnabled = revision !== undefined
-    const previousAccelerator = closeAccelerator()
     revision = definitions.length === 0 || snapshot.status === 'loading' ? undefined : snapshot.revision
     const rows = snapshot.status === 'loading' ? [] : effectiveShortcuts(definitions, snapshot.document, 'desktop', platform)
     keys = new Set(rows.flatMap(row => row.binding !== null && row.issue === null && row.conflicts.length === 0
       ? [bindingKey(row.binding)] : []))
-    const close = rows.find(row => row.id === 'page.close')
-    closeBinding = close?.issue === null && close.conflicts.length === 0 ? close.binding : null
-    if (wasEnabled !== (revision !== undefined) || previousAccelerator !== closeAccelerator()) updateMenu()
     const window = getWindow()
     if (window !== undefined && !window.isDestroyed() && window.webContents.mainFrame.url.startsWith('dsh-app://app/')) {
       window.webContents.send(DESKTOP_IPC.shortcutsChanged, snapshot)
@@ -176,9 +158,7 @@ export function installDesktopShortcuts(
       const modifiers = (['control', 'alt', 'shift', 'meta'] as const).filter(modifier => input[modifier])
       const key = bindingKey({ code: input.code, modifiers })
       const match = keys.has(key)
-      const menuMatch = closeBinding !== null && closeBinding.secondCode === undefined && modifiers.join('+') === closeBinding.modifiers.join('+')
-        && input.key.toUpperCase() === (closeBinding.code.startsWith('Key') ? closeBinding.code.slice(3) : input.code === closeBinding.code ? input.key.toUpperCase() : '')
-      contents.setIgnoreMenuShortcuts(recording || match || menuMatch)
+      contents.setIgnoreMenuShortcuts(recording || match)
       const frame = contents.focusedFrame
       const composing = input.isComposing || input.key === 'Dead' || deadKey || input.modifiers.includes('altgr')
       if (input.type === 'keyDown') deadKey = input.key === 'Dead'
@@ -296,19 +276,6 @@ export function installDesktopShortcuts(
       } finally {
         editingInput = previous
         if (!contents.isDestroyed()) contents.setIgnoreMenuShortcuts(recording)
-      }
-    },
-    fileMenu(labels) {
-      const accelerator = closeAccelerator()
-      return {
-        label: labels.fileMenu,
-        submenu: [{
-          id: 'dsh-page-close',
-          label: labels.closePage,
-          enabled: revision !== undefined,
-          ...(accelerator === undefined ? {} : { accelerator }),
-          click: sendMenuClose
-        }]
       }
     },
     attach(window) {

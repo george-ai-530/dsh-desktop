@@ -27,35 +27,40 @@ afterEach(async () => {
   await Promise.all(temporary.splice(0).map(path => rm(path, { recursive: true, force: true })))
 })
 
+/** One focused product window with the shortcut controller attached. */
+async function shortcutHarness(platform: 'macos' | 'windows' | 'linux') {
+  const userData = await mkdtemp(join(tmpdir(), 'dsh-shortcuts-'))
+  temporary.push(userData)
+  const frame = { url: 'dsh-app://app/', name: '', parent: null }
+  const contents = Object.assign(new EventEmitter(), {
+    mainFrame: frame,
+    focusedFrame: frame,
+    isDestroyed: () => false,
+    setIgnoreMenuShortcuts: vi.fn(),
+    send: vi.fn(),
+    focus: vi.fn(),
+    sendInputEvent: vi.fn()
+  })
+  const window = Object.assign(new EventEmitter(), {
+    webContents: contents,
+    isDestroyed: () => false,
+    isFocused: () => true,
+    isEnabled: () => true,
+    close: vi.fn()
+  })
+  const shortcuts = installDesktopShortcuts(() => window, userData, platform)
+  shortcuts.attach(window)
+  const call = async (channel: string, ...args: unknown[]) => {
+    const handler = ipc.handlers.get(channel)
+    if (handler === undefined) throw new Error(`missing ${channel}`)
+    return handler({ sender: contents, senderFrame: frame }, ...args)
+  }
+  return { contents, shortcuts, call, userData }
+}
+
 describe('desktop shortcuts', () => {
   it.each(['macos', 'windows', 'linux'] as const)('saves a binding and delivers the matching key on %s', async platform => {
-    const userData = await mkdtemp(join(tmpdir(), 'dsh-shortcuts-'))
-    temporary.push(userData)
-    const frame = { url: 'dsh-app://app/', name: '', parent: null }
-    const contents = Object.assign(new EventEmitter(), {
-      mainFrame: frame,
-      focusedFrame: frame,
-      isDestroyed: () => false,
-      setIgnoreMenuShortcuts: vi.fn(),
-      send: vi.fn(),
-      focus: vi.fn(),
-      sendInputEvent: vi.fn()
-    })
-    const window = Object.assign(new EventEmitter(), {
-      webContents: contents,
-      isDestroyed: () => false,
-      isFocused: () => true,
-      isEnabled: () => true,
-      close: vi.fn()
-    })
-    const updateMenu = vi.fn()
-    const shortcuts = installDesktopShortcuts(() => window, userData, platform, updateMenu)
-    shortcuts.attach(window)
-    const call = async (channel: string, ...args: unknown[]) => {
-      const handler = ipc.handlers.get(channel)
-      if (handler === undefined) throw new Error(`missing ${channel}`)
-      return handler({ sender: contents, senderFrame: frame }, ...args)
-    }
+    const { contents, shortcuts, call, userData } = await shortcutHarness(platform)
     const definitions = [{
       id: 'sidebar.left.toggle',
       defaults: {
@@ -73,7 +78,6 @@ describe('desktop shortcuts', () => {
     }]
     const initial = await call(DESKTOP_IPC.shortcutsGet, definitions) as { status?: string, revision?: string }
     expect(initial.status).toBe('ready')
-    expect(shortcuts.fileMenu({ fileMenu: '文件', closePage: '关闭页面或窗口' }).submenu?.[0]?.enabled).toBe(true)
     const prevented = vi.fn()
     contents.emit('before-input-event', { preventDefault: prevented, defaultPrevented: false }, {
       type: 'keyDown', code: 'KeyB', key: 'b', modifiers: [], meta: platform === 'macos', control: platform !== 'macos', alt: false, shift: false,
@@ -92,6 +96,32 @@ describe('desktop shortcuts', () => {
     expect(stored).not.toContain('token')
     shortcuts.dispose()
     expect(ipc.handlers.has(DESKTOP_IPC.shortcutsGet)).toBe(false)
+  })
+
+  // The native file menu is gone on every platform; the page.close shortcut
+  // must still reach the product page through the generic keyboard dispatch.
+  it.each(['macos', 'windows', 'linux'] as const)('delivers the page.close binding without a native menu on %s', async platform => {
+    const { contents, shortcuts, call } = await shortcutHarness(platform)
+    const definitions = [{
+      id: 'page.close',
+      defaults: {
+        'desktop:macos': { code: 'KeyW', modifiers: ['primary'] },
+        'desktop:windows': { code: 'KeyW', modifiers: ['primary'] },
+        'desktop:linux': { code: 'KeyW', modifiers: ['primary'] }
+      }
+    }]
+    const initial = await call(DESKTOP_IPC.shortcutsGet, definitions) as { status?: string }
+    expect(initial.status).toBe('ready')
+    const prevented = vi.fn()
+    contents.emit('before-input-event', { preventDefault: prevented, defaultPrevented: false }, {
+      type: 'keyDown', code: 'KeyW', key: 'w', modifiers: [], meta: platform === 'macos', control: platform !== 'macos', alt: false, shift: false,
+      isComposing: false, isAutoRepeat: false
+    })
+    expect(prevented).toHaveBeenCalled()
+    expect(contents.send).toHaveBeenCalledWith(DESKTOP_IPC.shortcutsInput, expect.objectContaining({
+      kind: 'keyboard', code: 'KeyW'
+    }))
+    shortcuts.dispose()
   })
 
   it('marks the new shell document for native shortcuts', () => {

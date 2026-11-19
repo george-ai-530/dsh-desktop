@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { menuMessages, desktopMenuMessages } from '../../src/main/shell/menu-messages'
-import { buildDarwinDesktopMenu, buildWindowsApplicationMenu, shortcutFileMenuLabels } from '../../src/main/shell/enterprise-menu'
+import { buildDarwinDesktopMenu, buildWindowsApplicationMenu } from '../../src/main/shell/enterprise-menu'
 import { windowsMenuTemplate } from '../../src/main/windows-menu'
 
 const languages = ['zh', 'en', 'ja', 'es', 'fr', 'de', 'ru', 'pt'] as const
@@ -21,24 +21,23 @@ describe('eight-language desktop menus', () => {
 
   it.each(languages)('preserves menu commands, roles and accelerators in %s', locale => {
     const text = menuMessages[locale]
+    // 两平台命令集对齐后，检查更新、安全模式、日志与文件菜单词条已随菜单项删除。
+    for (const removed of ['update', 'safeMode', 'log', 'fileMenu', 'closePage'] as const) {
+      expect(removed in text).toBe(false)
+    }
     const action = vi.fn()
-    const darwin = buildDarwinDesktopMenu({ locale, appName: 'DSH', showAbout: action, checkForUpdates: action, restart: action, restartSafeMode: action, showHarnessLog: action, hide: action, hideOthers: action, unhideAll: action, quit: action })
+    const darwin = buildDarwinDesktopMenu({ locale, appName: 'DSH', showAbout: action, restart: action, hide: action, hideOthers: action, unhideAll: action, quit: action })
     expect(darwin[0]?.submenu?.[0]?.label).toBe(text.about)
-    expect(darwin[0]?.submenu?.[4]?.label).toBe(text.log)
-    expect(darwin[0]?.submenu?.[6]?.label).toBe(text.hide.replace('{app}', 'DSH'))
+    expect(darwin[0]?.submenu?.[1]?.label).toBe(text.restart)
+    expect(darwin[0]?.submenu?.[3]?.label).toBe(text.hide.replace('{app}', 'DSH'))
     expect(darwin[1]?.submenu?.[0]).toMatchObject({ role: 'undo', label: text.undo })
     darwin[0]?.submenu?.[1]?.click?.()
     expect(action).toHaveBeenCalledOnce()
-    expect(shortcutFileMenuLabels(locale)).toEqual({ fileMenu: text.fileMenu, closePage: text.closePage })
     const windows = buildWindowsApplicationMenu({ locale, restart: action, quit: action })
     expect(windows[0]?.label).toBe(text.application)
     const windowsApplication = windows[0]?.submenu ?? []
     // 隐藏菜单只剩重启和退出，加速器随项收缩。
     expect(windowsApplication[0]).toMatchObject({ label: text.restart, accelerator: 'CmdOrCtrl+Shift+R' })
-    const windowLabels = windowsApplication.map(item => item.label)
-    expect(windowLabels).not.toContain(text.log)
-    expect(windowLabels).not.toContain(text.update)
-    expect(windowLabels).not.toContain(text.safeMode)
     const run = vi.fn()
     const edit = vi.fn()
     const application = windowsMenuTemplate('application', locale, 1.25, { run, sendEditingKey: edit })
@@ -46,9 +45,6 @@ describe('eight-language desktop menus', () => {
     expect(application[0]).toMatchObject({ label: text.restart, accelerator: 'Ctrl+Shift+R', registerAccelerator: false })
     application[0]?.click?.({} as never, {} as never, {} as never)
     expect(run).toHaveBeenCalledWith('restart-harness')
-    const applicationLabels = application.flatMap(item => Array.isArray(item.submenu) ? item.submenu.map(sub => sub.label) : [item.label])
-    expect(applicationLabels).not.toContain(text.log)
-    expect(applicationLabels).not.toContain(text.update)
     const view = application[2]?.submenu
     // 视图子菜单无开发者工具（文案键已随项删除）；重新加载后缩放项在索引 4。
     expect('devtools' in text).toBe(false)

@@ -11,39 +11,18 @@ export interface DesktopMenuItem {
   click?: () => void
 }
 
-export function updateMenuLabel(locale: string): string {
-  return desktopMenuMessages(locale).update
-}
-
-export function aboutMenuLabel(locale: string): string {
+function aboutMenuLabel(locale: string): string {
   return desktopMenuMessages(locale).about
-}
-
-export function safeModeMenuLabel(locale: string): string {
-  return desktopMenuMessages(locale).safeMode
 }
 
 export function restartMenuLabel(locale: string): string {
   return desktopMenuMessages(locale).restart
 }
 
-export function shortcutFileMenuLabels(locale: string): { fileMenu: string, closePage: string } {
-  const { fileMenu, closePage } = desktopMenuMessages(locale)
-  return { fileMenu, closePage }
-}
-
 /** Role actions remain native; their labels follow the Desktop language. */
 export function standardMenuLabels(locale: string) {
   const { edit, undo, redo, cut, copy, paste, selectAll, window, minimize, close } = desktopMenuMessages(locale)
   return { edit, undo, redo, cut, copy, paste, selectAll, window, minimize, close }
-}
-
-/** Keep About first. The file menu follows the application menu when shortcuts are installed. */
-export function insertFileMenu(items: readonly DesktopMenuItem[], fileMenu: DesktopMenuItem | undefined): DesktopMenuItem[] {
-  if (fileMenu === undefined) return [...items]
-  const [application, ...rest] = items
-  if (application === undefined) return [fileMenu]
-  return [application, fileMenu, ...rest]
 }
 
 /** The in-app about dialog is mounted only on the application document. */
@@ -68,22 +47,23 @@ export function externalUrlToOpen(url: string): string | undefined {
 }
 
 /**
- * macOS application menu. About opens the product dialog.
- * The next item checks for an update. Download starts only after consent.
- * Restart starts the current Host again. Safe Mode relaunches into the core profile when that action is supplied.
- * The next item reveals harness.log. It stays after Restart when Safe Mode is already active.
+ * macOS application menu, trimmed to the command set the Windows menus keep:
+ * About, Restart, the platform-standard Hide group and Quit. About opens the
+ * product dialog; Restart starts the current Host again.
+ * Deliberately absent on every platform, with the surviving way in:
+ * - Check for Updates: packaged auto-checks plus the About dialog button in
+ *   system dialogs (update/update-manager policy).
+ * - Restart as Safe Mode: the fatal-error dialog button and --safe-mode.
+ * - Show harness.log: no shell entry.
+ * - Close Page or Window: the product page receives the page.close shortcut
+ *   through the generic keyboard dispatch (shell/keyboard.ts), not a menu.
  * Phone pairing stays out of this menu.
- * Windows no longer mirrors this command set: its hidden application menu
- * carries only Restart and Quit.
  */
 export function buildDarwinDesktopMenu(options: {
   locale: string
   appName: string
   showAbout: () => void
-  checkForUpdates: () => void
   restart?: () => void
-  restartSafeMode?: () => void
-  showHarnessLog: () => void
   hide: () => void
   hideOthers: () => void
   unhideAll: () => void
@@ -96,14 +76,9 @@ export function buildDarwinDesktopMenu(options: {
       label: options.appName,
       submenu: [
         { label: aboutMenuLabel(options.locale), click: options.showAbout },
-        { label: updateMenuLabel(options.locale), accelerator: 'CmdOrCtrl+U', click: options.checkForUpdates },
         ...(options.restart === undefined
           ? []
           : [{ label: restartMenuLabel(options.locale), accelerator: 'CmdOrCtrl+Shift+R', click: options.restart }]),
-        ...(options.restartSafeMode === undefined
-          ? []
-          : [{ label: safeModeMenuLabel(options.locale), click: options.restartSafeMode }]),
-        { label: text.log, click: options.showHarnessLog },
         { type: 'separator' },
         {
           label: text.hide.replace('{app}', options.appName),
