@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh/lib/bin.js b/node_modules/@deepseek-ai/dsh/lib/bin.js
-index b9a2b8d..7ab323e 100755
+index b9a2b8d..7ab323e 100644
 --- a/node_modules/@deepseek-ai/dsh/lib/bin.js
 +++ b/node_modules/@deepseek-ai/dsh/lib/bin.js
 @@ -227,7 +227,8 @@ async function runCli(options = {}) {
@@ -13,10 +13,10 @@ index b9a2b8d..7ab323e 100755
  			break;
  		}
 diff --git a/node_modules/@deepseek-ai/dsh/package.json b/node_modules/@deepseek-ai/dsh/package.json
-index f41b2d4..f004613 100644
+index f41b2d4..c45fec4 100644
 --- a/node_modules/@deepseek-ai/dsh/package.json
 +++ b/node_modules/@deepseek-ai/dsh/package.json
-@@ -111,6 +111,21 @@
+@@ -111,6 +111,22 @@
      "@deepseek-ai/dsh-personalized-recommendations": "0.2.2-rc.1",
      "@deepseek-ai/dsh-experimental-forge-bundle": "0.2.2-rc.1"
    },
@@ -27,6 +27,7 @@ index f41b2d4..f004613 100644
 +    "dsh-desktop-hmr-fallback": "0.1.0",
 +    "dsh-desktop-log-bridge": "0.1.0",
 +    "dsh-desktop-market-installer": "0.1.0",
++    "dsh-desktop-mermaid": "0.1.0",
 +    "dsh-desktop-preset-transfer": "0.1.0",
 +    "dsh-image-generation": "0.1.0",
 +    "react-dom": "18.3.1",

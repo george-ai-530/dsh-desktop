@@ -1,0 +1,33 @@
+{
+  "name": "dsh-desktop-mermaid",
+  "version": "0.1.0",
+  "description": "Renders mermaid fenced code blocks as diagrams inside Markdown previews and chat.",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "client.mermaid.js",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-primitives"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1 || ^4.0.6-alpha.1 || ^4.1.0"
+  }
+}

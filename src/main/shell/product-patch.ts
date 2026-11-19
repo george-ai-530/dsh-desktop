@@ -27,7 +27,9 @@ function hasEnterprisePlugin(): boolean {
  * settings pages) are removed together; every occupant of the slots the
  * section declares must be disabled with it.
  * The normal profile also mounts workbenches, the plugin market installer,
- * Office, and PPT. Safe Mode keeps the account and brand overlay only.
+ * Office, and PPT. Safe Mode keeps the account and brand overlay only, plus
+ * the mermaid fence renderer so repair sessions can still read flowchart
+ * documents (disabling the plugin degrades fences back to code blocks).
  */
 const DESKTOP_PRODUCT_PATCH_BASE = `- id: desktop-product-telemetry
   disabled: true
@@ -75,6 +77,12 @@ const DESKTOP_PRODUCT_PATCH_BASE = `- id: desktop-product-telemetry
 - insert:
     - id: dsh-desktop-client-ui
       name: dsh-desktop-client-ui
+
+    # Renders "mermaid" fenced code blocks as diagrams in Markdown previews
+    # and chat. Its capability is client-only and degrades to the upstream
+    # code fence when the plugin is disabled or its lazy chunk fails.
+    - id: dsh-desktop-mermaid
+      name: dsh-desktop-mermaid
 `
 
 const DESKTOP_ENTERPRISE_ROW = `    - id: dsh-desktop-enterprise

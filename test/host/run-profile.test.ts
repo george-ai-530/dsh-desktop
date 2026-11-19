@@ -58,6 +58,76 @@ it('boots runProfile on a temporary home and redirects the authenticated documen
   }
 }, 120_000)
 
+/**
+ * The mermaid fence renderer rides the product patch on the normal profile.
+ * Beyond boot composition, this pins the serving half of the chunk protocol:
+ * the boot graph must name the plugin with its inject resolution, and the
+ * authenticated /plugins routes must serve both its bundle and its lazy
+ * `client.mermaid.js` sibling — the same exact routes a browser page pulls
+ * when a mermaid fence first renders.
+ */
+it('serves the mermaid fence renderer bundle and its lazy chunk on the desktop profile', async () => {
+  await ensureHostBundle()
+  const home = await mkdtemp(join(tmpdir(), 'dsh-shell-mermaid-'))
+  temporary.push(home)
+  const profile = join(home, 'profiles', 'desktop')
+  await mkdir(profile, { recursive: true })
+  await writeFile(join(profile, 'package.json'), JSON.stringify({
+    name: 'dsh-profile-desktop',
+    private: true,
+    dependencies: {},
+    dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'] } }
+  }))
+  await writeFile(join(profile, 'cordis.yml'), '[]\n')
+  await writeFile(join(profile, 'cordis.patch.yml'), '[]\n')
+  const host = new DesktopHostProcess({
+    node: electron,
+    entry: hostBundle,
+    runtimeDir: root,
+    projectDir: profile,
+    dshHome: home,
+    profile: 'desktop',
+    environment: { DSH_DESKTOP_PATCH_FILE: await writeDesktopProductPatch(home) },
+    primaryRuntime: join(home, 'unused-runtime')
+  })
+  try {
+    const ready = await host.start()
+    const bootRow = (ready.injections ?? []).find(row =>
+      typeof row === 'object' && row !== null &&
+      (row as { kind?: unknown }).kind === 'global' &&
+      (row as { name?: unknown }).name === '__DSH_BOOT__'
+    ) as { value?: { entries?: Array<{ id: string; url: string; rev: string; inject?: string[] }> } } | undefined
+    const entry = bootRow?.value?.entries?.find(candidate => candidate.id === 'dsh-desktop-mermaid')
+    expect(entry, 'boot graph names the mermaid plugin').toBeDefined()
+    expect(entry?.inject).toContain('@deepseek-ai/dsh-client-ui-primitives')
+
+    const first = await fetch(ready.url, { redirect: 'manual' })
+    expect(first.status).toBe(303)
+    const cookie = first.headers.getSetCookie().join('; ')
+    const headers = cookie === '' ? undefined : { cookie }
+
+    const bundle = await fetch(new URL(entry!.url, ready.url), { headers })
+    expect(bundle.status).toBe(200)
+    const bundleText = await bundle.text()
+    expect(bundleText).toContain("id: 'dsh-desktop-mermaid'")
+    expect(bundleText).toContain("require.async('./client.mermaid.js')")
+
+    // The chunk route mirrors the entry route with the sibling chunk name and
+    // the entry's own revision, per the client-modules serving contract.
+    const chunkUrl = new URL(
+      `plugins/dsh-desktop-mermaid/client.mermaid.js?rev=${encodeURIComponent(entry!.rev)}`,
+      ready.url
+    )
+    const chunk = await fetch(chunkUrl, { headers })
+    expect(chunk.status).toBe(200)
+    const chunkText = await chunk.text()
+    expect(chunkText).toContain("chunk: 'client.mermaid.js'")
+    expect(chunkText).toContain('MermaidDiagram')
+  } finally {
+    await host.stop()
+  }
+}, 240_000)
+
 it('boots safe mode without creating the shared profile modules directory', async () => {
   await ensureHostBundle()
   const home = await mkdtemp(join(tmpdir(), 'dsh-shell-safe-'))
