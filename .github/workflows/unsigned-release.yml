@@ -26,6 +26,11 @@ on:
         required: false
         type: boolean
         default: false
+      build_linux:
+        description: 是否构建 Linux deb（false 时本轮完全跳过 Linux，稍后可用同一标签补发）
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -175,6 +180,8 @@ jobs:
 
   build-linux:
     name: Linux x64
+    # build_linux=false 时整段跳过；发布侧把 skipped 视为正常而不是失败。
+    if: inputs.build_linux == true
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -238,17 +245,19 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     needs: [windows-x64, build-macos, build-linux]
-    # 默认三平台全部成功才发布；allow_partial 显式允许在 Linux 失败时仅发布 Windows/macOS。
+    # 默认三平台全部成功才发布；build_linux=false 跳过 Linux 属预期，skipped 不算失败；
+    # allow_partial 显式允许在 Linux 失败时仅发布 Windows/macOS。
     if: >-
       always() &&
       needs.windows-x64.result == 'success' &&
       needs.build-macos.result == 'success' &&
-      (needs.build-linux.result == 'success' || inputs.allow_partial == true)
+      (needs.build-linux.result == 'success' || needs.build-linux.result == 'skipped' || inputs.allow_partial == true)
     runs-on: ubuntu-24.04
     env:
       RELEASE_TAG: ${{ inputs.tag }}
       RELEASE_VERSION: ${{ inputs.version }}
       ALLOW_PARTIAL: ${{ inputs.allow_partial }}
+      BUILD_LINUX: ${{ inputs.build_linux }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -269,7 +278,8 @@ jobs:
           for name in "${expected[@]}"; do
             test -s "release-assets/$name" || { echo "::error::Missing expected asset: $name"; exit 1; }
           done
-          if [ "$ALLOW_PARTIAL" != 'true' ]; then
+          # 只有本轮预期携带 deb（既没有跳过 Linux，也没有允许部分发布）时才强制要求。
+          if [ "$ALLOW_PARTIAL" != 'true' ] && [ "$BUILD_LINUX" = 'true' ]; then
             shopt -s nullglob
             debs=(release-assets/cowin-harness-desktop-linux-x64-*.deb)
             test "${#debs[@]}" -ge 1 || { echo "::error::Missing Linux deb asset"; exit 1; }
@@ -302,7 +312,8 @@ jobs:
           - 请勿覆盖安装官方签名版本（两者共享同一数据目录）。
           NOTES
           fi
-          if [ "$ALLOW_PARTIAL" = 'true' ]; then
+          # Linux 缺席（跳过或部分发布）时，把说明中的 Linux 行改为待补提示。
+          if [ "$ALLOW_PARTIAL" = 'true' ] || [ "$BUILD_LINUX" != 'true' ]; then
             sed -i '/^- Linux (deb): /d' notes.md
             sed -i '/^- 校验和: SHA256SUMS.txt/a - Linux (deb)：本轮未包含，待后续补充上传' notes.md
           fi
