@@ -203,16 +203,22 @@ jobs:
           for pkg in gcc-8 g++-8 libgcc-8-dev libstdc++-8-dev; do
             curl -fsSL -o "$root/debs/$pkg.deb" "https://archive.debian.org/debian/pool/main/g/gcc-8/${pkg}_8.3.0-6_amd64.deb"
           done
+          # buster 的 cc1plus 动态链接 libisl.so.19，24.04 系统只有 so.23，必须随工具链私带。
+          curl -fsSL -o "$root/debs/libisl19.deb" "https://archive.debian.org/debian/pool/main/i/isl/libisl19_0.20-2_amd64.deb"
           cat > "$root/debs/SHA256SUMS" <<'SUMS'
           d333c8986adff11fb54aed83e1b29f99996c321f7fb5b75614d66e5aa611a5d8  g++-8.deb
           05e90f94363055cf27cd88b7968820645180d37a649a93cf5d7ea6f3c7fe973e  gcc-8.deb
           a52d5216858c7185bc245e52ad95a6ad515d087bc25e8556df06c5626b41a837  libgcc-8-dev.deb
           79965b74e6c839e7b90d24ac5b61840f57872ecb1e4ac1007937036c85364f82  libstdc++-8-dev.deb
+          d51e27d3fcba9bd0fe5f3303b61d08ebbd1a3bc57c40d467338b34f5d4ee762f  libisl19.deb
           SUMS
           (cd "$root/debs" && sha256sum -c SHA256SUMS)
           for deb in "$root"/debs/*.deb; do dpkg-deb -x "$deb" "$root/root"; done
           cat > "$root/g++-8" <<'WRAP'
           #!/bin/sh
+          # 编译器自己的 buster 运行库（libisl19）只在私有目录：仅对编译器进程生效，
+          # 不导出到脚本内的 dlopen 校验或后续打包阶段。
+          export LD_LIBRARY_PATH="$RUNNER_TEMP/toolchain8/root/usr/lib/x86_64-linux-gnu:$RUNNER_TEMP/toolchain8/root/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           exec "$RUNNER_TEMP/toolchain8/root/usr/bin/g++-8" -B"$RUNNER_TEMP/toolchain8/root/usr/lib/gcc/x86_64-linux-gnu/8/" "$@"
           WRAP
           chmod +x "$root/g++-8"
