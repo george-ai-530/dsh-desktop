@@ -18,11 +18,20 @@ const HOST_ATTRIBUTE = 'data-dsh-windows-menu'
  * collapses. The popups are native menus opened by the main process.
  *
  * Harness pages wait for AppFrame's shell overlay so the menubar appears with
- * the rendered application; Desktop's own pages (plugin recovery, splash) have
- * no sidebar and mount immediately at the caption's left edge.
+ * the rendered application; Desktop's own pages (plugin recovery, web import)
+ * have no sidebar and mount immediately at the caption's left edge. The splash
+ * page is a pure brand loading surface with nothing to command, so it mounts
+ * no menubar.
  */
+const SPLASH_DOCUMENT_SUFFIX = '/splash.html'
+
+function isSplashDocument(location: Document['location']): boolean {
+  return location.protocol === 'file:' && location.pathname.endsWith(SPLASH_DOCUMENT_SUFFIX)
+}
+
 export function mountWindowsMenuBar(options: MenuBarOptions): { dispose(): void } {
   const { document, ipcRenderer } = options
+  if (isSplashDocument(document.location)) return { dispose: () => {} }
   const existing = document.querySelector(`[${HOST_ATTRIBUTE}]`)
   if (existing) return { dispose: () => existing.remove() }
 

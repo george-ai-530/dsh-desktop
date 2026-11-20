@@ -37,3 +37,20 @@ it('reserves the caption row on standalone recovery pages before mounting menus'
   if (!shell) throw new Error('standalone shell missing')
   expect(getComputedStyle(shell).height).toBe('100%')
 })
+
+it('keeps the splash layout and drag region but mounts no caption menus', () => {
+  jsdom.reconfigure({ url: 'file:///desktop/resources/splash.html' })
+  vi.stubGlobal('MutationObserver', class extends MutationObserver {
+    constructor(callback: MutationCallback) {
+      super(callback)
+      observers.push(this)
+    }
+  })
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: vi.fn() }))
+  document.body.replaceChildren()
+  mountWindowsTitlebarLayout({ document, ipcRenderer: { invoke: vi.fn(async () => undefined) } })
+  expect(document.body.hasAttribute('data-dsh-standalone-titlebar')).toBe(true)
+  expect(getComputedStyle(document.body).paddingTop).toBe('40px')
+  expect(document.getElementById('dsh-desktop-windows-drag-region')).not.toBeNull()
+  expect(document.querySelector('[data-dsh-windows-menu]')).toBeNull()
+})

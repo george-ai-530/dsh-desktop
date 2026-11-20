@@ -109,3 +109,25 @@ it('leaves the Harness caption seat owned by AppFrame in normal and safe repair 
   expect(document.getElementById('dsh-desktop-windows-drag-region')).toBeNull()
   vi.unstubAllGlobals()
 })
+
+// jsdom's storage getters throw on a file: origin, so the production URL is
+// exercised by reconfiguring after setup and restored before teardown.
+declare const jsdom: { reconfigure(options: { url: string }): void }
+
+it('mounts no caption menubar on the splash page while other standalone pages still mount', async () => {
+  jsdom.reconfigure({ url: 'file:///C:/app/resources/splash.html' })
+  document.body.replaceChildren()
+  const invoke = vi.fn(async () => undefined)
+  const splash = mountWindowsMenuBar({ document, ipcRenderer: { invoke } })
+  expect(host()).toBeNull()
+  splash.dispose()
+  expect(host()).toBeNull()
+
+  jsdom.reconfigure({ url: 'file:///C:/app/resources/plugin-recovery.html' })
+  document.body.replaceChildren()
+  const recovery = mountWindowsMenuBar({ document, ipcRenderer: { invoke } })
+  expect(host()).not.toBeNull()
+  expect(host()?.hasAttribute('data-standalone')).toBe(true)
+  recovery.dispose()
+  jsdom.reconfigure({ url: 'http://localhost:3000/' })
+})
