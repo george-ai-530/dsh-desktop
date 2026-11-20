@@ -178,10 +178,85 @@ jobs:
             dist/cowin-harness-desktop-mac-${{ matrix.arch }}.zip.blockmap
             dist/latest-mac-${{ matrix.arch }}.yml
 
+  sherpa-linux:
+    name: Linux speech addon rebuild
+    # Linux deb 打包强制要求可加载的 sherpa-onnx 重编译产物：锁定的 1.13.8 二进制
+    # 要求 GLIBC_2.32，目标 UOS 基线（glibc 2.28）加载不了，需按
+    # docs/sherpa-linux-compatibility.md 在旧基线重编译 N-API 包装层。
+    # 这里用仓库锁定的 Debian buster GCC 8.3 私有工具链（哈希固定，不安装系统包），
+    # 产物由 build-linux 打包前再用 sherpa-linux-overlay 校验版本/哈希/ELF 架构。
+    if: inputs.build_linux == true
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Provision reviewed GCC 8.3 toolchain
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/toolchain8"
+          mkdir -p "$root/debs" "$root/root"
+          for pkg in gcc-8 g++-8 libgcc-8-dev libstdc++-8-dev; do
+            curl -fsSL -o "$root/debs/$pkg.deb" "https://archive.debian.org/debian/pool/main/g/gcc-8/${pkg}_8.3.0-6_amd64.deb"
+          done
+          cat > "$root/debs/SHA256SUMS" <<'SUMS'
+          d333c8986adff11fb54aed83e1b29f99996c321f7fb5b75614d66e5aa611a5d8  g++-8.deb
+          05e90f94363055cf27cd88b7968820645180d37a649a93cf5d7ea6f3c7fe973e  gcc-8.deb
+          a52d5216858c7185bc245e52ad95a6ad515d087bc25e8556df06c5626b41a837  libgcc-8-dev.deb
+          79965b74e6c839e7b90d24ac5b61840f57872ecb1e4ac1007937036c85364f82  libstdc++-8-dev.deb
+          SUMS
+          (cd "$root/debs" && sha256sum -c SHA256SUMS)
+          for deb in "$root"/debs/*.deb; do dpkg-deb -x "$deb" "$root/root"; done
+          cat > "$root/g++-8" <<'WRAP'
+          #!/bin/sh
+          exec "$RUNNER_TEMP/toolchain8/root/usr/bin/g++-8" -B"$RUNNER_TEMP/toolchain8/root/usr/lib/gcc/x86_64-linux-gnu/8/" "$@"
+          WRAP
+          chmod +x "$root/g++-8"
+          {
+            echo "COMPILER_PATH=$root/root/usr/lib/gcc/x86_64-linux-gnu/8"
+            echo "CPLUS_INCLUDE_PATH=$root/root/usr/include/c++/8:$root/root/usr/include/x86_64-linux-gnu/c++/8:$root/root/usr/include/c++/8/backward"
+          } >> "$GITHUB_ENV"
+      - name: Download and verify upstream source archive
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "$RUNNER_TEMP/sherpa-onnx-1.13.8.tar.gz" "https://codeload.github.com/k2-fsa/sherpa-onnx/tar.gz/refs/tags/v1.13.8"
+          echo "b0374cc56dbc186d442ae73d5de743bb092470b640c4c50ce7b029044c0c4fa8  $RUNNER_TEMP/sherpa-onnx-1.13.8.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/sherpa-onnx-1.13.8"
+          tar -xzf "$RUNNER_TEMP/sherpa-onnx-1.13.8.tar.gz" -C "$RUNNER_TEMP/sherpa-onnx-1.13.8" --strip-components=1
+      - name: Download Node headers matching the rebuild runtime
+        run: |
+          set -euo pipefail
+          node_version="$(node -p 'process.version')"
+          mkdir -p "$RUNNER_TEMP/node-headers"
+          curl -fsSL "https://nodejs.org/dist/${node_version}/node-${node_version}-headers.tar.xz" | tar -xJ -C "$RUNNER_TEMP/node-headers"
+          echo "NODE_HEADERS=$RUNNER_TEMP/node-headers/node-${node_version}/include/node" >> "$GITHUB_ENV"
+      - name: Rebuild reviewed N-API wrapper
+        run: |
+          set -euo pipefail
+          mkdir -p .build
+          node scripts/release/rebuild-sherpa-linux.mjs \
+            "$RUNNER_TEMP/sherpa-onnx-1.13.8" \
+            "$NODE_HEADERS" \
+            .build/sherpa-linux \
+            "$RUNNER_TEMP/toolchain8/g++-8" \
+            "$RUNNER_TEMP/sherpa-onnx-1.13.8.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-linux-rebuild
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+          path: .build/sherpa-linux/**
+
   build-linux:
     name: Linux x64
     # build_linux=false 时整段跳过；发布侧把 skipped 视为正常而不是失败。
     if: inputs.build_linux == true
+    needs: [sherpa-linux]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -219,6 +294,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Download rebuilt Linux speech addon
+        uses: actions/download-artifact@v4
+        with:
+          name: sherpa-linux-rebuild
+          path: .build/sherpa-linux
+      - name: Verify rebuilt speech addon metadata
+        run: node -e "require('./scripts/release/sherpa-linux-overlay.cjs').verifySherpaOverlay(process.cwd())"
       - name: Cache generated Office and PPT assets
         uses: actions/cache@v4
         with:
@@ -245,13 +327,16 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     needs: [windows-x64, build-macos, build-linux]
-    # 默认三平台全部成功才发布；build_linux=false 跳过 Linux 属预期，skipped 不算失败；
-    # allow_partial 显式允许在 Linux 失败时仅发布 Windows/macOS。
+    # 默认三平台全部成功才发布；build_linux=false 主动跳过 Linux 属预期，
+    # 只有在这种情况下 skipped 才算正常。Linux 请求了却跳过（sherpa-linux 或
+    # build-linux 失败导致）不算发布条件，除非 allow_partial 显式放行。
     if: >-
       always() &&
       needs.windows-x64.result == 'success' &&
       needs.build-macos.result == 'success' &&
-      (needs.build-linux.result == 'success' || needs.build-linux.result == 'skipped' || inputs.allow_partial == true)
+      (needs.build-linux.result == 'success' ||
+       (needs.build-linux.result == 'skipped' && inputs.build_linux == false) ||
+       inputs.allow_partial == true)
     runs-on: ubuntu-24.04
     env:
       RELEASE_TAG: ${{ inputs.tag }}
