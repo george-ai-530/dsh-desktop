@@ -58,7 +58,7 @@ npm run brand:sync        # 同步 SVG 路径到侧边栏/英雄区/onboarding �
 应用成品已按**路线 B** 替换为官方 COWIN 珂阳位图：
 
 - 权威输入是 `build/brand/source/cowin-logo.jpg`（官方位图，本目录 `source/` 子目录）。`node scripts/release/render-official-logo-assets.mjs` 从它生成 `build/` 上一级的 `app-icon.png`、`icon.png`、`logo-light.png`、`logo-dark.png` 和 `startup-brand.svg`（紧界裁切、白底转透明、JPEG 噪声抑制；dark 版蓝自动提亮为 `#366EF4`，橙色不变）。
-- 之后再跑 `npm run icons:generate`（从新 `app-icon.png` 重建 `icon.ico`；`icon.icns` 需在 macOS/CI 上补跑）和 `node scripts/release/install-brand-assets.mjs`（刷新注入到 Web 前端 dist 的 favicon/apple-touch-icon/manifest/明暗 logo，并把模型输出占位的鲸鱼遮罩换成 loading 圆环、把「深度求索中」改写为「深度思考中」）。
+- 之后再跑 `npm run icons:generate`（从新 `app-icon.png` 重建 `icon.ico`；`icon.icns` 需在 macOS/CI 上补跑）和 `node scripts/release/install-brand-assets.mjs`（刷新注入到 Web 前端 dist 的 favicon/apple-touch-icon/manifest/明暗 logo，并把模型输出占位的鲸鱼遮罩换成 loading 圆环、为其注入持续旋转的 CSS 动画、把「深度求索中」改写为「深度思考中」）。
 - `npm run brand:sync` 除内嵌矢量外，还会把 `hero-light.png` / `hero-dark.png`（本目录，官方位图渲染，高 96px）以 base64 同步进 `dsh-desktop-client-ui/client.js` 的 `HERO_MARK_*_DATA`——新对话 hero 图标即这两张随主题深浅切换的官方位图。
 - 启动页与 Host 等待页的 mark 宽高比是 **742:378**：`build/splash.html` 的 `<img width height>` 与 `src/preload/boot-cover.ts` 的 `MARK_ASPECT_RATIO` / `mark.width` / `mark.height` 已同步（`test/boot-cover.test.ts` 有对应断言）。
 - **不要**在替换后再跑 `npm run brand:render`：它会用本目录的 SVG 源覆盖官方成品 PNG（`startup-brand.svg` 例外，存在即跳过）。`brand:sync` 与 `client.js` 内嵌矢量常量不受本次替换影响，继续使用 `brand-mark.svg` / `logo-wordmark.svg` 的 COWIN 重绘版（侧边栏单色 mark、onboarding、shimmer 遮罩保持矢量管线）。

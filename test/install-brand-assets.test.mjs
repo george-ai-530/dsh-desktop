@@ -31,6 +31,15 @@ const vendorFixtures = {
 
 const runningWhaleMaskName = 'running-whale@2x-06738fa29b2f.png'
 
+// The real chat bundle inlines the ChatView stylesheet as a JS string; the
+// running indicator's mask rule inside it is the seam the release script
+// patches (enableRunningSpinnerRotation). Kept verbatim from upstream
+// 0.2.2-rc.1, including the bundler's require.asset string concatenation —
+// the fixture is only read as text, never executed.
+const runningWhaleCss = '.EvIC1a_runningWhaleAnimated{will-change:transform;background:currentColor;display:block;mask:url(" + require.asset("plugins/@deepseek-ai/dsh-client-ui-chat/assets/running-whale%402x-06738fa29b2f.png") + ") 50%/100% 100% no-repeat alpha}.EvIC1a_runningWhaleStill{display:none}}}'
+const runningSpinnerAnimation = 'animation:EvIC1a_running-spin 1s linear infinite'
+const runningSpinnerKeyframes = '@keyframes EvIC1a_running-spin{to{transform:rotate(1turn)}}'
+
 async function writeSolidPng(file, width, height) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="${width}" height="${height}" fill="#000"/></svg>`
   await writeFile(file, await sharp(Buffer.from(svg)).png().toBuffer())
@@ -70,7 +79,7 @@ async function fixture(icons, run) {
       if (counts.deepSeekHarness > 0) source += 'DeepSeek Harness '.repeat(counts.deepSeekHarness)
       if (counts.deepSeek > 0) source += 'DeepSeek '.repeat(counts.deepSeek)
       if (counts.dsh > 0) source += 'restart DSH now. '.repeat(counts.dsh)
-      if (pkg === 'dsh-client-ui-chat') source += '"chat.deepDiving": "深度求索中", "chat.deepDivingFor": "深度求索中，用时 {duration} ···",'
+      if (pkg === 'dsh-client-ui-chat') source += '"chat.deepDiving": "深度求索中", "chat.deepDivingFor": "深度求索中，用时 {duration} ···",' + runningWhaleCss
       if (pkg === 'dsh-client-ui-sidebar-documentpreview') source += 'const isDSHRemoteError = true; const cfg = "__DSH_DOCUMENT_PREVIEW_CONFIG_"'
       await writeFile(path.join(dir, 'client.js'), source)
     }
@@ -134,6 +143,12 @@ describe('brand assets installation across Harness versions', () => {
           expect(source).toContain('深度思考中')
           expect(source).toContain('深度思考中，用时 {duration} ···')
           expect(source).not.toContain('深度求索中')
+          // The static ring gets a continuous spin inside upstream's own
+          // reduced-motion/forced-colors guard, plus exactly one keyframes
+          // rule appended at the top level of the same stylesheet text.
+          expect(source).toContain(runningSpinnerAnimation)
+          expect((source.match(/@keyframes EvIC1a_running-spin\{to\{transform:rotate\(1turn\)\}\}/gu) || [])).toHaveLength(1)
+          expect(source.indexOf(runningSpinnerAnimation)).toBeLessThan(source.indexOf('@keyframes EvIC1a_running-spin'))
         }
         // The documentpreview fixture keeps identifier-embedded DSH tokens to
         // prove the standalone-only rule leaves code identifiers untouched.
@@ -145,9 +160,25 @@ describe('brand assets installation across Harness versions', () => {
           expect(source).not.toMatch(/DSH/)
         }
       }
+      // Idempotent: the second pass leaves the rebranded, spinning chat
+      // bundle untouched too.
+      const chatBundle = path.join(root, 'node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js')
+      const chatBeforeRerun = await readFile(chatBundle, 'utf8')
       execute()
       const htmlSecond = await readFile(path.join(dist, 'index.html'), 'utf8')
       expect(htmlSecond).toBe(html)
+      expect(await readFile(chatBundle, 'utf8')).toBe(chatBeforeRerun)
+    })
+  })
+
+  it('rejects an unrecognized running-indicator stylesheet instead of shipping a still icon', async () => {
+    await fixture([{ src: './favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }], async ({ root, execute }) => {
+      // Mirror an upstream restyle by dropping the pinned mask rule while the
+      // locale dictionary above it stays untouched.
+      const chat = path.join(root, 'node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js')
+      const source = await readFile(chat, 'utf8')
+      await writeFile(chat, source.replace(runningWhaleCss, ''))
+      expect(execute).toThrow('running spinner')
     })
   })
 
@@ -177,7 +208,7 @@ describe('brand assets installation across Harness versions', () => {
       // Mirror an install that already ran the previous "COWIN Desktop"
       // branding: the vendor copy and the document title carry the old name.
       const chat = path.join(root, 'node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js')
-      await writeFile(chat, 'COWIN Desktop '.repeat(17))
+      await writeFile(chat, 'COWIN Desktop '.repeat(17) + runningWhaleCss)
       await writeFile(
         path.join(dist, 'index.html'),
         '<title>COWIN Desktop</title><meta name="apple-mobile-web-app-title" content="COWIN" />'

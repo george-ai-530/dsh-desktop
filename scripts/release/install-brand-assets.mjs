@@ -212,11 +212,12 @@ async function rewriteVendorBrandStrings() {
 }
 
 /**
- * The upstream "model is thinking" shimmer is masked by a whale bitmap. Swap
- * the asset for a loading ring at the same dimensions so the streaming
- * indicator reads as a spinner while keeping the upstream shimmer sweep. The
- * file is part of the pinned upstream closure; on upgrade the hashed
- * filename or size may change and this step must be re-checked.
+ * The upstream "model is thinking" indicator is a whale APNG whose baked-in
+ * frames own the animation. Swap the asset for a static loading ring at the
+ * same dimensions; the continuous spin itself is injected into the vendored
+ * stylesheet by `enableRunningSpinnerRotation`. The file is part of the
+ * pinned upstream closure; on upgrade the hashed filename or size may change
+ * and this step must be re-checked.
  */
 async function replaceRunningWhaleMask() {
   const maskPath = path.join(
@@ -237,8 +238,9 @@ async function replaceRunningWhaleMask() {
     return
   }
   const sharp = require('sharp')
-  // A 270° arc with round caps inside the original canvas: the gap and the
-  // shimmer sweep together read as the usual loading spinner.
+  // A 270° arc with round caps inside the original canvas: together with the
+  // CSS spin injected by `enableRunningSpinnerRotation` the gap reads as the
+  // usual loading spinner.
   const size = Math.min(original.width, original.height)
   const center = size / 2
   const radius = size / 2 - 4
@@ -247,6 +249,51 @@ async function replaceRunningWhaleMask() {
   const ring = `<svg xmlns="http://www.w3.org/2000/svg" width="${String(original.width)}" height="${String(original.height)}" viewBox="0 0 ${String(original.width)} ${String(original.height)}"><path d="M ${top} A ${radius} ${radius} 0 1 1 ${left}" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>`
   const png = await sharp(Buffer.from(ring)).png().toBuffer()
   await writeFile(maskPath, png)
+}
+
+/**
+ * Give the replaced whale mask a real spin.
+ *
+ * Upstream animates its running indicator by playing the frames baked into
+ * the APNG asset; a static ring PNG has no motion of its own and the
+ * upstream CSS never rotates the icon, so the streaming placeholder would
+ * sit still. Patch the vendored stylesheet text (same pinned-release
+ * contract as `rewriteVendorBrandStrings`): one `animation` declaration on
+ * `.EvIC1a_runningWhaleAnimated` — inside upstream's own
+ * `prefers-reduced-motion`/`forced-colors` guard, so reduced-motion users
+ * keep the static fallback — plus one top-level `@keyframes` in the same
+ * stylesheet. The rotation is compositor-friendly via upstream's existing
+ * `will-change:transform`. On upgrade a changed upstream shape fails here
+ * loudly instead of shipping a still icon.
+ */
+async function enableRunningSpinnerRotation() {
+  const clientPath = path.join(
+    projectRoot,
+    'node_modules',
+    '@deepseek-ai',
+    'dsh-client-ui-chat',
+    'lib',
+    'client.js'
+  )
+  let contents = await readFile(clientPath, 'utf8')
+  const animation = 'animation:EvIC1a_running-spin 1s linear infinite'
+  // Idempotence: a rerun only sees the already-patched declaration.
+  if (contents.includes(animation)) return
+  const declarationAnchor = '.EvIC1a_runningWhaleAnimated{will-change:transform;background:currentColor;display:block;mask:url('
+  const keyframesAnchor = ') 50%/100% 100% no-repeat alpha}.EvIC1a_runningWhaleStill{display:none}}}'
+  if (!contents.includes(declarationAnchor) || !contents.includes(keyframesAnchor)) {
+    throw new Error(
+      `Could not enable the COWIN running spinner in ${path.relative(projectRoot, clientPath)}: expected the pinned upstream .EvIC1a_runningWhaleAnimated mask rule; re-check this seam after a Harness upgrade`
+    )
+  }
+  const keyframes = '@keyframes EvIC1a_running-spin{to{transform:rotate(1turn)}}'
+  contents = contents
+    .replace(
+      declarationAnchor,
+      `.EvIC1a_runningWhaleAnimated{will-change:transform;${animation};background:currentColor;display:block;mask:url(`
+    )
+    .replace(keyframesAnchor, keyframesAnchor + keyframes)
+  await writeFile(clientPath, contents)
 }
 
 await mkdir(destinationDirectory, { recursive: true })
@@ -265,6 +312,7 @@ await writeFile(
 )
 
 await rewriteVendorBrandStrings()
+await enableRunningSpinnerRotation()
 await replaceRunningWhaleMask()
 
 console.log(`Installed COWIN Harness Desktop brand assets: ${[
