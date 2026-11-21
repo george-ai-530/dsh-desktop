@@ -57,11 +57,19 @@ it('keeps the Word worker off the Windows confinement command line', () => {
   const argv = docxWorkerArgv('python.exe')
   expect(argv.join('\0')).not.toContain(script)
   expect(argv.filter(arg => arg.includes('\n'))).toEqual([])
-  const env = docxWorkerEnvironment({ env: { ELECTRON_RUN_AS_NODE: '1', SystemRoot: 'C:\\Windows', SECRET: 'x' }, platform: 'win32', versions: { electron: '39.0.0' } }, script)
+  const env = docxWorkerEnvironment({ env: { ELECTRON_RUN_AS_NODE: '1', SystemRoot: 'C:\\Windows', TEMP: 'C:\\Temp', SECRET: 'x' }, platform: 'win32', versions: { electron: '39.0.0' } }, script)
   expect(env.DSH_DOCX_LAYOUT_SOURCE).toBe(script)
   expect(env.ELECTRON_RUN_AS_NODE).toBe('1')
   expect(env.SystemRoot).toBe('C:\\Windows')
+  // The ACL runner resolves its lock directory through GetTempPathW; without a
+  // carried temp variable it falls back to the Windows directory and needs
+  // elevation. A standard user account must keep the writable temp root.
+  expect(env.TEMP).toBe('C:\\Temp')
+  expect(env.TMP).toBe('C:\\Temp')
   expect(env.SECRET).toBeUndefined()
+  expect(docxWorkerEnvironment({ env: { USERPROFILE: 'C:\\Users\\user' }, platform: 'win32', versions: {} }).TMP).toBe('C:\\Users\\user')
+  expect(docxWorkerEnvironment({ env: { SystemRoot: 'C:\\Windows' }, platform: 'win32', versions: {} }).TEMP).toBeUndefined()
+  expect(docxWorkerEnvironment({ env: { TEMP: '/tmp' }, platform: 'darwin', versions: {} }).TEMP).toBeUndefined()
   expect(docxWorkerEnvironment({ env: { SystemRoot: 'C:\\Windows' }, platform: 'win32', versions: {} }).ELECTRON_RUN_AS_NODE).toBeUndefined()
   expect(() => docxWorkerEnvironment({ env: {}, platform: 'win32', versions: {} }, 'x'.repeat(24001))).toThrow('Windows environment limit')
   expect(docxWorkerPython('runtime', 'win32')).toBe(join('runtime', 'primary-runtime/dependencies/python', 'pythonw.exe'))
