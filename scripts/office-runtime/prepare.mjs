@@ -131,7 +131,7 @@ export async function prepareOfficeRuntime({ target = officeTarget(), output = j
     const filename = `cpython-${lock.pythonVersion}+${lock.pythonRelease}-${artifact.pythonTarget}-install_only_stripped.tar.gz`
     const url = `https://github.com/astral-sh/python-build-standalone/releases/download/${lock.pythonRelease}/${encodeURIComponent(filename)}`
     await extractTar({ file: await downloadAsset(url, artifact.pythonSha256, cache), cwd: dependencies })
-    const windows = target === 'win-x64'
+    const windows = target.startsWith('win-')
     const pythonLib = join(dependencies, 'python', ...(windows ? ['Lib'] : ['lib', `python${lock.pythonVersion.split('.').slice(0, 2).join('.')}`]))
     const sitePackages = join(pythonLib, 'site-packages')
     for (const wheel of [...artifact.wheels, ...lock.wheels]) {

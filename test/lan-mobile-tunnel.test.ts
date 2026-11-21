@@ -123,6 +123,11 @@ describe('Cloudflare Quick Tunnel utilities', () => {
     expect(winX64?.spec.asset).toBe('cloudflared-windows-amd64.exe')
     expect(winX64?.spec.isTarGz).toBe(false)
 
+    // Windows on ARM64 runs the pinned amd64 binary under x64 emulation.
+    const winArm64 = resolveCurrentAssetSpec('win32', 'arm64')
+    expect(winArm64?.spec.asset).toBe('cloudflared-windows-amd64.exe')
+    expect(winArm64?.spec.isTarGz).toBe(false)
+
     const linuxArm64 = resolveCurrentAssetSpec('linux', 'arm64')
     expect(linuxArm64?.spec.asset).toBe('cloudflared-linux-arm64')
 

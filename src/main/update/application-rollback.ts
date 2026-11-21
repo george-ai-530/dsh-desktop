@@ -70,7 +70,7 @@ export class ApplicationRollback {
     await this.initialize()
     const record = this.record
     const supported = (this.environment.platform === 'darwin' && ['arm64', 'x64'].includes(this.environment.arch))
-      || (this.environment.platform === 'win32' && this.environment.arch === 'x64')
+      || (this.environment.platform === 'win32' && ['x64', 'arm64'].includes(this.environment.arch))
     if (!this.environment.packaged || !supported) {
       return { available: false, reason: 'unsupported-installation' }
     }

@@ -34,14 +34,14 @@ beforeEach(async () => {
   await usePlatform('darwin')
 })
 
-async function usePlatform(platform: NodeJS.Platform) {
+async function usePlatform(platform: NodeJS.Platform, arch: string = 'x64') {
   // The original recovery assertions require a supported installation, not the test host's OS.
   vi.stubGlobal('process', Object.create(process, {
     platform: { value: platform },
-    arch: { value: 'x64' }
+    arch: { value: arch }
   }))
   await new ApplicationRollback(join(mocks.root, 'application-rollback.json'), {
-    version: '0.11.2', platform, arch: 'x64', packaged: true
+    version: '0.11.2', platform, arch, packaged: true
   }).recordUpgrade('0.13.0')
   vi.resetModules()
   manager = await import('../src/main/update/update-manager')
@@ -85,8 +85,7 @@ it.each(['darwin', 'win32'] as const)('downloads only the actual pre-upgrade ver
   expect(mocks.updater.quitAndInstall).toHaveBeenCalledWith(false, true)
   expect(await manager.getApplicationRollbackStatus()).toMatchObject({ available: false, reason: 'rollback-installing' })
 })
-it('keeps Linux recovery unsupported even with a compatible previous installation', async () => {
-  await usePlatform('linux')
+it('keeps Linux recovery unsupported even with a compatible previous installation', async () => {  await usePlatform('linux')
   const prepare = vi.fn(async () => {})
   manager.startUpdateManager({ prepareToInstall: prepare, rollbackCompatibility: async () => ({ compatible: true }) })
   expect(manager.getUpdateStatus()).toMatchObject({ phase: 'unsupported' })
@@ -97,6 +96,14 @@ it('keeps Linux recovery unsupported even with a compatible previous installatio
   expect(mocks.updater.downloadUpdate).not.toHaveBeenCalled()
   expect(prepare).not.toHaveBeenCalled()
   expect(mocks.updater.quitAndInstall).not.toHaveBeenCalled()
+})
+
+it('treats a Windows ARM64 installation as supported', async () => {
+  await usePlatform('win32', 'arm64')
+  const prepare = vi.fn(async () => {})
+  manager.startUpdateManager({ prepareToInstall: prepare, rollbackCompatibility: async () => ({ compatible: true }) })
+  expect(manager.getUpdateStatus()).not.toMatchObject({ phase: 'unsupported' })
+  expect(await manager.getApplicationRollbackStatus()).not.toMatchObject({ reason: 'unsupported-installation' })
 })
 
 it('blocks missing exact archive rather than selecting a nearby release', async () => {

@@ -21,14 +21,16 @@ async function createFixture(root) {
   const armZip = await writeFixture(root, 'dsh-desktop-mac-arm64.zip', Buffer.from('PK-arm'))
   const x64Zip = await writeFixture(root, 'dsh-desktop-mac-x64.zip', Buffer.from('PK-x64'))
   const windows = await writeFixture(root, 'dsh-desktop-windows-x64-setup.exe', Buffer.from('MZ-win'))
+  const windowsArm64 = await writeFixture(root, 'dsh-desktop-windows-arm64-setup.exe', Buffer.from('MZ-win-arm64'))
   await Promise.all([
     writeFile(path.join(root, 'dsh-desktop-mac-arm64.dmg'), Buffer.concat([Buffer.alloc(512), Buffer.from('koly')])),
     writeFile(path.join(root, 'dsh-desktop-mac-x64.dmg'), Buffer.concat([Buffer.alloc(512), Buffer.from('koly')])),
     writeFile(path.join(root, 'dsh-desktop-mac-arm64.zip.blockmap'), 'blockmap'),
     writeFile(path.join(root, 'dsh-desktop-mac-x64.zip.blockmap'), 'blockmap'),
     writeFile(path.join(root, 'dsh-desktop-windows-x64-setup.exe.blockmap'), 'blockmap'),
+    writeFile(path.join(root, 'dsh-desktop-windows-arm64-setup.exe.blockmap'), 'blockmap'),
     writeFile(path.join(root, 'latest-mac.yml'), stringify({ version: '1.2.3', files: [armZip, x64Zip] })),
-    writeFile(path.join(root, 'latest.yml'), stringify({ version: '1.2.3', files: [windows] }))
+    writeFile(path.join(root, 'latest.yml'), stringify({ version: '1.2.3', files: [windows, windowsArm64] }))
   ])
 }
 

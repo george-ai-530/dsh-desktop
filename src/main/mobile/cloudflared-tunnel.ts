@@ -38,6 +38,14 @@ export const CLOUDFLARED_ASSETS: Record<string, CloudflareAssetSpec> = {
     isTarGz: false,
     sha256: 'c29eee2b121f5436a642eed69fd9767da7e7b8c510fa50aaa130337f931357b5'
   },
+  // Cloudflare publishes no Windows ARM64 build for this version. Windows on
+  // ARM64 emulates x64, so the pinned amd64 executable is the supported binary
+  // for that target too; replace this entry when upstream ships an arm64 asset.
+  'win32-arm64': {
+    asset: 'cloudflared-windows-amd64.exe',
+    isTarGz: false,
+    sha256: 'c29eee2b121f5436a642eed69fd9767da7e7b8c510fa50aaa130337f931357b5'
+  },
   'linux-x64': {
     asset: 'cloudflared-linux-amd64',
     isTarGz: false,

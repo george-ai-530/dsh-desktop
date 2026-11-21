@@ -6,7 +6,9 @@ This guide covers local development, validation, patch maintenance, and target-n
 
 - Node.js 22 or later
 - npm
-- macOS on Apple Silicon or Intel, or Windows x64
+- macOS on Apple Silicon or Intel, or Windows x64/ARM64
+
+Windows ARM64 packaging requires the native arm64 Node.js runtime: an x64 Node under emulation installs x64 optional binaries, so `verify-target` and the packaged native modules would not match.
 
 This baseline pins `@deepseek-ai/dsh@0.2.2-rc.1`. Windows packages run Harness in Electron Node mode, while macOS uses an Electron UtilityProcess. Both are independent of the Node.js version used to run development commands.
 
@@ -129,6 +131,10 @@ npm run package:mac:x64
 
 # Windows x64 NSIS installer, on a Windows x64 machine or runner
 npm run package:win
+
+# Windows ARM64 NSIS installer, on a Windows ARM64 machine with arm64 Node.js
+npm run package:win:arm64
+npm run package:dev:win:arm64
 
 # UOS V20 x86_64 / Linux x64 deb, on the target Linux machine
 npm run package:linux:x64

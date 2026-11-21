@@ -20,7 +20,7 @@ export function isPrereleaseVersion(value: string): boolean {
 export function desktopPlatform(platform: string, arch: string): DesktopPlatform {
   if (platform === 'darwin' && arch === 'arm64') return 'mac'
   if (platform === 'darwin' && arch === 'x64') return 'mac-intel'
-  if (platform === 'win32' && arch === 'x64') return 'windows'
+  if (platform === 'win32' && (arch === 'x64' || arch === 'arm64')) return 'windows'
   throw new Error(`Unsupported desktop platform: ${platform}/${arch}`)
 }
 export function redact(value: string): string {

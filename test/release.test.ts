@@ -245,7 +245,10 @@ describe('GitHub release contract', () => {
       'cowin-harness-desktop-windows-${arch}-setup.${ext}'
     )
     expect(packageJson.build.nsis.include).toBe('build/installer.nsh')
-    expect(packageJson.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }])
+    // No arch list here: `package:win` and `package:win:arm64` select the single
+    // target architecture on the command line, and a config-level list makes
+    // electron-builder build every listed arch with the same node_modules.
+    expect(packageJson.build.win.target).toEqual(['nsis'])
     expect(packageJson.build.win.requestedExecutionLevel).toBe('asInvoker')
     expect(packageJson.build.portable).toBeUndefined()
   })
@@ -349,6 +352,8 @@ describe('GitHub release contract', () => {
     expect(packageJson.scripts['package:dev:win']).toContain('verify-target.mjs win32 x64')
     expect(packageJson.scripts['package:dev:win']).toContain('electron-builder.dev.cjs')
     expect(packageJson.scripts['package:dev:win']).toContain('--publish never')
+    expect(packageJson.scripts['package:dev:win:arm64']).toContain('verify-target.mjs win32 arm64')
+    expect(packageJson.scripts['package:dev:win:arm64']).toContain('electron-builder.dev.cjs')
     expect(developmentConfig.appId).toBe('io.dsh.desktop.dev')
     expect(developmentConfig.productName).toBe('COWIN Harness Desktop Dev')
     expect(developmentConfig.directories.output).toBe('dist-dev')

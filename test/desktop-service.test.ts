@@ -63,6 +63,7 @@ describe('desktop service', () => {
     expect(desktopPlatform('darwin', 'arm64')).toBe('mac')
     expect(desktopPlatform('darwin', 'x64')).toBe('mac-intel')
     expect(desktopPlatform('win32', 'x64')).toBe('windows')
+    expect(desktopPlatform('win32', 'arm64')).toBe('windows')
     expect(isPrereleaseVersion('0.9.0+build-info')).toBe(false)
     expect(isPrereleaseVersion('0.9.0-rc.1+build')).toBe(true)
     expect(() => desktopPlatform('linux', 'x64')).toThrow('Unsupported')
@@ -186,6 +187,7 @@ describe('desktop service', () => {
   })
   it.each([
     ['win32', 'x64', 'windows'],
+    ['win32', 'arm64', 'windows'],
     ['darwin', 'arm64', 'mac'],
     ['darwin', 'x64', 'mac-intel']
   ])('sends manual=true only for user-initiated rollout bypass checks on %s/%s', async (platform, arch, expectedPlatform) => {

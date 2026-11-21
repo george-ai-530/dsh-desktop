@@ -14,6 +14,8 @@ const REQUIRED_ASSETS = [
   'dsh-desktop-mac-x64.zip.blockmap',
   'dsh-desktop-windows-x64-setup.exe',
   'dsh-desktop-windows-x64-setup.exe.blockmap',
+  'dsh-desktop-windows-arm64-setup.exe',
+  'dsh-desktop-windows-arm64-setup.exe.blockmap',
   'latest-mac.yml',
   'latest.yml'
 ]
@@ -110,6 +112,7 @@ export async function verifyReleaseAssets(releaseDir, version, options = {}) {
   }
 
   await assertUpdateEntry(root, 'latest.yml', version, 'dsh-desktop-windows-x64-setup.exe')
+  await assertUpdateEntry(root, 'latest.yml', version, 'dsh-desktop-windows-arm64-setup.exe')
   await assertUpdateEntry(root, 'latest-mac.yml', version, 'dsh-desktop-mac-arm64.zip')
   await assertUpdateEntry(root, 'latest-mac.yml', version, 'dsh-desktop-mac-x64.zip')
 }

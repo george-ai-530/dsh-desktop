@@ -106,6 +106,7 @@ PowerShell 通过 `$env:DSH_DEV_PROFILE` 等方式设置；以上覆盖均被正
 | `npm run package:dev:mac:arm64` | macOS Apple Silicon 未签名开发包 |
 | `npm run package:dev:mac:x64` | macOS Intel 未签名开发包 |
 | `npm run package:dev:win` | Windows x64 未签名开发包 |
+| `npm run package:dev:win:arm64` | Windows ARM64 未签名开发包（需原生 arm64 Node） |
 | `npm run package:dev:linux:x64` | Linux x64 开发身份 deb |
 
 正式签名包（均 `--publish never`，不在本地发布）：
@@ -116,6 +117,7 @@ PowerShell 通过 `$env:DSH_DEV_PROFILE` 等方式设置；以上覆盖均被正
 | `npm run package:mac:arm64` | macOS Apple Silicon 正式包 |
 | `npm run package:mac:x64` | macOS Intel 正式包 |
 | `npm run package:win` | Windows x64 正式 NSIS 安装包 |
+| `npm run package:win:arm64` | Windows ARM64 正式 NSIS 安装包（需原生 arm64 Node） |
 | `npm run package:linux:x64` | Linux x64 deb（UOS V20 目标本机打包，非正式发布渠道） |
 
 ### 资源与素材

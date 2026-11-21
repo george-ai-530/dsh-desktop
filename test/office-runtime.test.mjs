@@ -77,12 +77,27 @@ describe('Office runtime assembly', () => {
     expect(officeRuntimeIdentity('linux-x64')).toEqual({ platform: 'linux', arch: 'x64' })
     expect(officeRuntimeIdentity('mac-arm64')).toEqual({ platform: 'darwin', arch: 'arm64' })
     expect(officeRuntimeIdentity('win-x64')).toEqual({ platform: 'win32', arch: 'x64' })
+    expect(officeRuntimeIdentity('win-arm64')).toEqual({ platform: 'win32', arch: 'arm64' })
     expect(() => officeRuntimeIdentity('linux-arm64')).toThrow('unknown target')
     expect(() => officeTarget('linux', 'arm64')).toThrow('unsupported native target')
     expect(officeTarget('win32', 'x64')).toBe('win-x64')
+    expect(officeTarget('win32', 'arm64')).toBe('win-arm64')
     expect(officeTarget('darwin', 'arm64')).toBe('mac-arm64')
     expect(officeTarget('darwin', 'x64')).toBe('mac-x64')
-    expect(() => officeTarget('win32', 'arm64')).toThrow('unsupported native target')
+  })
+
+  it('locks Windows ARM64 CPython and native wheels for the same Python version', async () => {
+    const lock = JSON.parse(await readFile(join(root, 'scripts/office-runtime/lock.json'), 'utf8'))
+    const arm64 = lock.targets['win-arm64']
+    expect(arm64.pythonTarget).toBe('aarch64-pc-windows-msvc')
+    expect(arm64.pythonSha256).toMatch(/^[a-f0-9]{64}$/)
+    expect(arm64.wheels).toHaveLength(4)
+    for (const wheel of arm64.wheels) {
+      const url = new URL(wheel.url)
+      expect(url.hostname).toBe('files.pythonhosted.org')
+      expect(url.pathname).toContain('-cp312-cp312-win_arm64.whl')
+      expect(wheel.sha256).toMatch(/^[a-f0-9]{64}$/)
+    }
   })
 
   it('locks Linux CPython and native wheels compatible with glibc 2.28', async () => {
