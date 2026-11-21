@@ -6,18 +6,23 @@ import { fileURLToPath } from 'node:url'
 import { parse } from 'yaml'
 
 const REQUIRED_ASSETS = [
-  'dsh-desktop-mac-arm64.dmg',
-  'dsh-desktop-mac-arm64.zip',
-  'dsh-desktop-mac-arm64.zip.blockmap',
-  'dsh-desktop-mac-x64.dmg',
-  'dsh-desktop-mac-x64.zip',
-  'dsh-desktop-mac-x64.zip.blockmap',
-  'dsh-desktop-windows-x64-setup.exe',
-  'dsh-desktop-windows-x64-setup.exe.blockmap',
-  'dsh-desktop-windows-arm64-setup.exe',
-  'dsh-desktop-windows-arm64-setup.exe.blockmap',
+  'cowin-harness-desktop-mac-arm64.dmg',
+  'cowin-harness-desktop-mac-arm64.zip',
+  'cowin-harness-desktop-mac-arm64.zip.blockmap',
+  'cowin-harness-desktop-mac-x64.dmg',
+  'cowin-harness-desktop-mac-x64.zip',
+  'cowin-harness-desktop-mac-x64.zip.blockmap',
+  'cowin-harness-desktop-windows-x64-setup.exe',
+  'cowin-harness-desktop-windows-x64-setup.exe.blockmap',
   'latest-mac.yml',
   'latest.yml'
+]
+
+// The signed release workflow builds only Windows x64. ARM64 Windows installers are
+// published by the unsigned fork workflow, so validate them only when present.
+const OPTIONAL_ASSETS = [
+  'cowin-harness-desktop-windows-arm64-setup.exe',
+  'cowin-harness-desktop-windows-arm64-setup.exe.blockmap'
 ]
 
 // A complete DSH Desktop runtime is substantially larger than these floors.
@@ -100,21 +105,26 @@ export async function verifyReleaseAssets(releaseDir, version, options = {}) {
   const root = resolve(releaseDir)
   const minimumBytes = { ...DEFAULT_MINIMUM_BYTES, ...options.minimumBytes }
 
-  for (const name of REQUIRED_ASSETS) {
+  for (const name of [...REQUIRED_ASSETS, ...OPTIONAL_ASSETS]) {
     const kind = assetKind(name)
     const file = join(root, name)
     const fileStat = await stat(file).catch(() => undefined)
-    if (!fileStat?.isFile()) throw new Error(`Missing required release asset: ${name}`)
+    if (!fileStat?.isFile()) {
+      if (OPTIONAL_ASSETS.includes(name)) continue
+      throw new Error(`Missing required release asset: ${name}`)
+    }
     if (fileStat.size < minimumBytes[kind]) {
       throw new Error(`${name} is unexpectedly small (${fileStat.size} bytes)`)
     }
     await assertFileHeader(file, kind, fileStat.size)
   }
 
-  await assertUpdateEntry(root, 'latest.yml', version, 'dsh-desktop-windows-x64-setup.exe')
-  await assertUpdateEntry(root, 'latest.yml', version, 'dsh-desktop-windows-arm64-setup.exe')
-  await assertUpdateEntry(root, 'latest-mac.yml', version, 'dsh-desktop-mac-arm64.zip')
-  await assertUpdateEntry(root, 'latest-mac.yml', version, 'dsh-desktop-mac-x64.zip')
+  await assertUpdateEntry(root, 'latest.yml', version, 'cowin-harness-desktop-windows-x64-setup.exe')
+  if (await stat(join(root, 'cowin-harness-desktop-windows-arm64-setup.exe')).then(() => true, () => false)) {
+    await assertUpdateEntry(root, 'latest.yml', version, 'cowin-harness-desktop-windows-arm64-setup.exe')
+  }
+  await assertUpdateEntry(root, 'latest-mac.yml', version, 'cowin-harness-desktop-mac-arm64.zip')
+  await assertUpdateEntry(root, 'latest-mac.yml', version, 'cowin-harness-desktop-mac-x64.zip')
 }
 
 async function main() {

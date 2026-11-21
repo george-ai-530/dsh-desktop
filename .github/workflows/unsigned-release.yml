@@ -1,10 +1,10 @@
 name: Release unsigned desktop installers
 
-# 本 workflow 为本 fork 的未签名发布专用：三平台以正式产品身份（io.dsh.desktop /
-# COWIN Harness Desktop）构建安装包，不做代码签名与 macOS 公证，不上传更新元数据，
-# 产物发布到本仓库的 GitHub Release。与上游 release.yml 互不影响：签名、Feishu/
-# ModelScope 通知与正式发布链路仍只走 release.yml。设计说明见
-# docs/release-runbook.md「Unsigned fork releases」。
+# 本 workflow 为本 fork 的未签名发布专用：各平台以正式产品身份（io.dsh.desktop /
+# COWIN Harness Desktop）构建安装包（Windows x64/ARM64、macOS arm64/x64、可选 Linux deb），
+# 不做代码签名与 macOS 公证，不上传更新元数据，产物发布到本仓库的 GitHub Release。
+# 与上游 release.yml 互不影响：签名、Feishu/ModelScope 通知与正式发布链路仍只走
+# release.yml。设计说明见 docs/release-runbook.md「Unsigned fork releases」。
 
 on:
   workflow_dispatch:
@@ -96,6 +96,67 @@ jobs:
           path: |
             dist/cowin-harness-desktop-windows-x64-setup.exe
             dist/cowin-harness-desktop-windows-x64-setup.exe.blockmap
+            dist/latest.yml
+
+  windows-arm64:
+    name: Windows ARM64
+    # GitHub 的 ARM64 Windows 公共 runner（public preview）。标签不可用或组织未开放时，
+    # 改用同构的自托管 arm64 Windows runner：构建必须在该架构本机完成，verify-target 会拒绝交叉打包。
+    runs-on: windows-11-arm
+    steps:
+      - name: Preserve shared asset fingerprints during checkout
+        shell: bash
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set app version
+        run: npm version --no-git-tag-version --allow-same-version "${{ inputs.version }}"
+      - name: Configure native download caches before dependency installation
+        shell: bash
+        run: |
+          # Electron install.js reads the lowercase setting; builder uses uppercase.
+          echo "electron_config_cache=$RUNNER_TEMP/electron-cache" >> "$GITHUB_ENV"
+          echo "ELECTRON_CACHE=$RUNNER_TEMP/electron-cache" >> "$GITHUB_ENV"
+          echo "ELECTRON_BUILDER_CACHE=$RUNNER_TEMP/electron-builder-cache" >> "$GITHUB_ENV"
+      - name: Cache Electron, electron-builder and Office runtime downloads
+        uses: actions/cache@v4
+        with:
+          # 独立键：Electron 发行包和 electron-builder 工具集按架构分发，不复用 x64 缓存。
+          path: |
+            .build/office-downloads
+            ${{ env.ELECTRON_CACHE }}
+            ${{ env.ELECTRON_BUILDER_CACHE }}
+          key: windows-arm64-packaging-v1-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
+          restore-keys: |
+            windows-arm64-packaging-v1-
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Cache generated Office and PPT assets
+        uses: actions/cache@v4
+        with:
+          enableCrossOsArchive: true
+          path: |
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: desktop-generated-assets-v1-${{ hashFiles('scripts/office-runtime/**', 'packages/dsh-desktop-office/**', 'scripts/*ppt*.mjs', 'scripts/ppt/**', 'packages/ppt-runtime/**', 'package-lock.json') }}
+          restore-keys: desktop-generated-assets-v1-
+      - run: npm run build
+      - name: Verify PPT generation leaves tracked sources clean
+        run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
+      - name: Build Windows ARM64 installer
+        run: node scripts/verify/verify-target.mjs win32 arm64 && node scripts/release/electron-builder-windows.mjs --win --arm64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-windows-arm64
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            dist/cowin-harness-desktop-windows-arm64-setup.exe
+            dist/cowin-harness-desktop-windows-arm64-setup.exe.blockmap
             dist/latest.yml
 
   build-macos:
@@ -332,13 +393,14 @@ jobs:
 
   publish-release:
     name: Publish GitHub Release
-    needs: [windows-x64, build-macos, build-linux]
-    # 默认三平台全部成功才发布；build_linux=false 主动跳过 Linux 属预期，
+    needs: [windows-x64, windows-arm64, build-macos, build-linux]
+    # 默认所有平台构建成功才发布；build_linux=false 主动跳过 Linux 属预期，
     # 只有在这种情况下 skipped 才算正常。Linux 请求了却跳过（sherpa-linux 或
     # build-linux 失败导致）不算发布条件，除非 allow_partial 显式放行。
     if: >-
       always() &&
       needs.windows-x64.result == 'success' &&
+      needs.windows-arm64.result == 'success' &&
       needs.build-macos.result == 'success' &&
       (needs.build-linux.result == 'success' ||
        (needs.build-linux.result == 'skipped' && inputs.build_linux == false) ||
@@ -364,6 +426,7 @@ jobs:
           find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.deb' \) \
             -exec cp {} release-assets/ \;
           expected=(cowin-harness-desktop-windows-x64-setup.exe
+            cowin-harness-desktop-windows-arm64-setup.exe
             cowin-harness-desktop-mac-arm64.dmg cowin-harness-desktop-mac-arm64.zip
             cowin-harness-desktop-mac-x64.dmg cowin-harness-desktop-mac-x64.zip)
           for name in "${expected[@]}"; do
@@ -390,6 +453,7 @@ jobs:
 
           - 来源 commit: ${GITHUB_SHA}
           - Windows: cowin-harness-desktop-windows-x64-setup.exe
+          - Windows (ARM64): cowin-harness-desktop-windows-arm64-setup.exe
           - macOS (Apple Silicon): cowin-harness-desktop-mac-arm64.dmg / .zip
           - macOS (Intel): cowin-harness-desktop-mac-x64.dmg / .zip
           - Linux (deb): cowin-harness-desktop-linux-amd64-${RELEASE_VERSION}.deb

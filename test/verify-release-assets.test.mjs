@@ -17,21 +17,25 @@ async function writeFixture(root, name, content) {
   return { url: name, size: content.length, sha512: await digest(content) }
 }
 
-async function createFixture(root) {
-  const armZip = await writeFixture(root, 'dsh-desktop-mac-arm64.zip', Buffer.from('PK-arm'))
-  const x64Zip = await writeFixture(root, 'dsh-desktop-mac-x64.zip', Buffer.from('PK-x64'))
-  const windows = await writeFixture(root, 'dsh-desktop-windows-x64-setup.exe', Buffer.from('MZ-win'))
-  const windowsArm64 = await writeFixture(root, 'dsh-desktop-windows-arm64-setup.exe', Buffer.from('MZ-win-arm64'))
-  await Promise.all([
-    writeFile(path.join(root, 'dsh-desktop-mac-arm64.dmg'), Buffer.concat([Buffer.alloc(512), Buffer.from('koly')])),
-    writeFile(path.join(root, 'dsh-desktop-mac-x64.dmg'), Buffer.concat([Buffer.alloc(512), Buffer.from('koly')])),
-    writeFile(path.join(root, 'dsh-desktop-mac-arm64.zip.blockmap'), 'blockmap'),
-    writeFile(path.join(root, 'dsh-desktop-mac-x64.zip.blockmap'), 'blockmap'),
-    writeFile(path.join(root, 'dsh-desktop-windows-x64-setup.exe.blockmap'), 'blockmap'),
-    writeFile(path.join(root, 'dsh-desktop-windows-arm64-setup.exe.blockmap'), 'blockmap'),
-    writeFile(path.join(root, 'latest-mac.yml'), stringify({ version: '1.2.3', files: [armZip, x64Zip] })),
-    writeFile(path.join(root, 'latest.yml'), stringify({ version: '1.2.3', files: [windows, windowsArm64] }))
-  ])
+async function createFixture(root, { windowsArm64 = true } = {}) {
+  const armZip = await writeFixture(root, 'cowin-harness-desktop-mac-arm64.zip', Buffer.from('PK-arm'))
+  const x64Zip = await writeFixture(root, 'cowin-harness-desktop-mac-x64.zip', Buffer.from('PK-x64'))
+  const windows = await writeFixture(root, 'cowin-harness-desktop-windows-x64-setup.exe', Buffer.from('MZ-win'))
+  const windowsFiles = [windows]
+  const pending = [
+    writeFile(path.join(root, 'cowin-harness-desktop-mac-arm64.dmg'), Buffer.concat([Buffer.alloc(512), Buffer.from('koly')])),
+    writeFile(path.join(root, 'cowin-harness-desktop-mac-x64.dmg'), Buffer.concat([Buffer.alloc(512), Buffer.from('koly')])),
+    writeFile(path.join(root, 'cowin-harness-desktop-mac-arm64.zip.blockmap'), 'blockmap'),
+    writeFile(path.join(root, 'cowin-harness-desktop-mac-x64.zip.blockmap'), 'blockmap'),
+    writeFile(path.join(root, 'cowin-harness-desktop-windows-x64-setup.exe.blockmap'), 'blockmap'),
+    writeFile(path.join(root, 'latest-mac.yml'), stringify({ version: '1.2.3', files: [armZip, x64Zip] }))
+  ]
+  if (windowsArm64) {
+    windowsFiles.push(await writeFixture(root, 'cowin-harness-desktop-windows-arm64-setup.exe', Buffer.from('MZ-win-arm64')))
+    pending.push(writeFile(path.join(root, 'cowin-harness-desktop-windows-arm64-setup.exe.blockmap'), 'blockmap'))
+  }
+  pending.push(writeFile(path.join(root, 'latest.yml'), stringify({ version: '1.2.3', files: windowsFiles })))
+  await Promise.all(pending)
 }
 
 describe('release asset verification', () => {
@@ -55,14 +59,24 @@ describe('release asset verification', () => {
     }
   })
 
+  it('accepts a signed release that carries no ARM64 Windows installer', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'dsh-release-assets-'))
+    try {
+      await createFixture(root, { windowsArm64: false })
+      await expect(verifyReleaseAssets(root, '1.2.3', { minimumBytes })).resolves.toBeUndefined()
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
   it('rejects a missing release asset', async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'dsh-release-assets-'))
     try {
       await createFixture(root)
-      await rm(path.join(root, 'dsh-desktop-mac-x64.dmg'))
+      await rm(path.join(root, 'cowin-harness-desktop-mac-x64.dmg'))
       await expect(
         verifyReleaseAssets(root, '1.2.3', { minimumBytes })
-      ).rejects.toThrow('Missing required release asset: dsh-desktop-mac-x64.dmg')
+      ).rejects.toThrow('Missing required release asset: cowin-harness-desktop-mac-x64.dmg')
     } finally {
       await rm(root, { recursive: true, force: true })
     }
@@ -72,7 +86,20 @@ describe('release asset verification', () => {
     const root = await mkdtemp(path.join(tmpdir(), 'dsh-release-assets-'))
     try {
       await createFixture(root)
-      await writeFile(path.join(root, 'dsh-desktop-windows-x64-setup.exe'), 'not-an-exe')
+      await writeFile(path.join(root, 'cowin-harness-desktop-windows-x64-setup.exe'), 'not-an-exe')
+      await expect(
+        verifyReleaseAssets(root, '1.2.3', { minimumBytes })
+      ).rejects.toThrow('is not a PE executable')
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects an optional ARM64 installer whose file signature is invalid', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'dsh-release-assets-'))
+    try {
+      await createFixture(root)
+      await writeFile(path.join(root, 'cowin-harness-desktop-windows-arm64-setup.exe'), 'not-an-exe')
       await expect(
         verifyReleaseAssets(root, '1.2.3', { minimumBytes })
       ).rejects.toThrow('is not a PE executable')
@@ -91,7 +118,7 @@ describe('release asset verification', () => {
           version: '1.2.3',
           files: [
             {
-              url: 'dsh-desktop-windows-x64-setup.exe',
+              url: 'cowin-harness-desktop-windows-x64-setup.exe',
               size: 6,
               sha512: 'wrong-digest'
             }

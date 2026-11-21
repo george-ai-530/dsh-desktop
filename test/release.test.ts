@@ -421,6 +421,26 @@ describe('GitHub release contract', () => {
     ).toHaveLength(3)
   })
 
+  it('publishes a Windows ARM64 installer from the unsigned fork workflow', async () => {
+    const workflow = await readFile(
+      path.join(projectRoot, '.github', 'workflows', 'unsigned-release.yml'),
+      'utf8'
+    ) as string
+    const parsed = parse(workflow) as {
+      jobs: Record<string, { 'runs-on'?: string; needs?: string[] }>
+    }
+
+    // GitHub 的 ARM64 Windows 公共 runner 上本机构建；交叉打包会被 verify-target 拒绝。
+    expect(parsed.jobs['windows-arm64']?.['runs-on']).toBe('windows-11-arm')
+    expect(workflow).toContain('node scripts/verify/verify-target.mjs win32 arm64')
+    expect(workflow).toContain('--win --arm64 --publish never')
+    expect(workflow).toContain('dist/cowin-harness-desktop-windows-arm64-setup.exe')
+    // 发布任务必须等 ARM64 构建，且资产清单包含该安装包。
+    expect(parsed.jobs['publish-release']?.needs).toContain('windows-arm64')
+    expect(parsed.jobs['publish-release']?.needs).toContain('windows-x64')
+    expect(workflow).toContain('cowin-harness-desktop-windows-arm64-setup.exe')
+  })
+
   it('signs and notarizes both macOS architectures on tag releases', async () => {
     const workflow = await readFile(
       path.join(projectRoot, '.github', 'workflows', 'release.yml'),
